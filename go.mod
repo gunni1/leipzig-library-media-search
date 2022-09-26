@@ -1,3 +1,3 @@
-module gunni1/game-index-library-le/m/v2
+module github.com/gunni1/game-index-library-le
 
 go 1.19
