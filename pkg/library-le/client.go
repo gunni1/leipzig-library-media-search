@@ -3,6 +3,8 @@ package libraryle
 import (
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -10,7 +12,6 @@ import (
 )
 
 type Client struct {
-	baseUrl string
 	session webOpacSession
 }
 
@@ -19,29 +20,52 @@ type webOpacSession struct {
 	userSessionId string
 }
 
-func (client Client) FindAvailabelGames(branchCode int, console string) []domain.Game {
-	sessionErr := client.openSession()
+func (libClient Client) FindAvailabelGames(branchCode int, console string) []domain.Game {
+	sessionErr := libClient.openSession()
 	if sessionErr != nil {
 		fmt.Println(sessionErr)
 		return nil
 	}
 
-	http.Get("https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do?selectedViewBranchlib=41&selectedSearchBranchlib=41")
 	request, _ := http.NewRequest("GET", "https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do", nil)
+	jSessionCookie := &http.Cookie{
+		Name:   "JSESSIONID",
+		Value:  libClient.session.jSessionId,
+		MaxAge: 300,
+	}
+	userSessionCookie := &http.Cookie{
+		Name:   "USERSESSIONID",
+		Value:  libClient.session.userSessionId,
+		MaxAge: 300,
+	}
+	request.AddCookie(jSessionCookie)
+	request.AddCookie(userSessionCookie)
+
 	query := request.URL.Query()
 	//Fix Query Params to make the search working
 	query.Add("methodToCall", "submit")
 	query.Add("methodToCallParameter", "submitSearch")
-	query.Add("searchCategories%5B0%5D", "902")
+	query.Add("searchCategories[0]", "902")
 	query.Add("submitSearch", "Suchen")
 	query.Add("callingPage", "searchPreferences")
 	query.Add("numberOfHits", "500")
 	query.Add("timeOut", "20")
 	//Query Params dependend on user input / session
-	query.Add("CSId", client.session.userSessionId)
-	query.Add("searchString%5B0%5D", console)
+	query.Add("CSId", libClient.session.userSessionId)
+	query.Add("searchString[0]", console)
 	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	fmt.Println(query.Encode())
+	request.URL.RawQuery = query.Encode()
+
+	httpClient := http.Client{}
+	response, err := httpClient.Do(request)
+	if err != nil {
+		log.Fatal("error during search")
+	}
+	defer response.Body.Close()
+	body, _ := io.ReadAll(response.Body)
+
+	//INSERT Response processing here
+	fmt.Println(string(body))
 
 	return nil
 }
