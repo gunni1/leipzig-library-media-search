@@ -27,16 +27,31 @@ func (libClient Client) FindAvailabelGames(branchCode int, console string) []dom
 		return nil
 	}
 
+	request := createSearchRequest(branchCode, console, libClient.session.jSessionId, libClient.session.userSessionId)
+	httpClient := http.Client{}
+	response, err := httpClient.Do(request)
+	if err != nil {
+		log.Fatal("error during search")
+		return nil
+	}
+	defer response.Body.Close()
+	body, _ := io.ReadAll(response.Body)
+
+	//INSERT Response processing here
+	fmt.Println(string(body))
+
+	return nil
+}
+
+func createSearchRequest(branchCode int, searchString string, jSessionId string, userSessionId string) *http.Request {
 	request, _ := http.NewRequest("GET", "https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do", nil)
 	jSessionCookie := &http.Cookie{
-		Name:   "JSESSIONID",
-		Value:  libClient.session.jSessionId,
-		MaxAge: 300,
+		Name:  "JSESSIONID",
+		Value: jSessionId,
 	}
 	userSessionCookie := &http.Cookie{
-		Name:   "USERSESSIONID",
-		Value:  libClient.session.userSessionId,
-		MaxAge: 300,
+		Name:  "USERSESSIONID",
+		Value: userSessionId,
 	}
 	request.AddCookie(jSessionCookie)
 	request.AddCookie(userSessionCookie)
@@ -51,23 +66,11 @@ func (libClient Client) FindAvailabelGames(branchCode int, console string) []dom
 	query.Add("numberOfHits", "500")
 	query.Add("timeOut", "20")
 	//Query Params dependend on user input / session
-	query.Add("CSId", libClient.session.userSessionId)
-	query.Add("searchString[0]", console)
+	query.Add("CSId", userSessionId)
+	query.Add("searchString[0]", searchString)
 	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
 	request.URL.RawQuery = query.Encode()
-
-	httpClient := http.Client{}
-	response, err := httpClient.Do(request)
-	if err != nil {
-		log.Fatal("error during search")
-	}
-	defer response.Body.Close()
-	body, _ := io.ReadAll(response.Body)
-
-	//INSERT Response processing here
-	fmt.Println(string(body))
-
-	return nil
+	return request
 }
 
 func (client *Client) openSession() error {
