@@ -3,7 +3,6 @@ package libraryle
 import (
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -35,10 +34,11 @@ func (libClient Client) FindAvailabelGames(branchCode int, console string) []dom
 		return nil
 	}
 	defer response.Body.Close()
-	body, _ := io.ReadAll(response.Body)
+	//body, _ := io.ReadAll(response.Body)
 
 	//INSERT Response processing here
-	fmt.Println(string(body))
+	parseSearchResult(response)
+	//fmt.Println(string(body))
 
 	return nil
 }
