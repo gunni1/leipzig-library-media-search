@@ -10,7 +10,10 @@ import (
 	"github.com/gunni1/game-index-library-le/pkg/domain"
 )
 
-const resultItemSelector string = "td[style*='width:100%']"
+const (
+	resultItemSelector string = "td[style*='width:100%']"
+	resultDataSelector string = "table.data"
+)
 
 // Takes a http.Response from a webopac search and
 // try to parse it to an array of games that are listed as available.
@@ -21,14 +24,14 @@ func parseSearchResult(searchResult *http.Response) ([]domain.Game, error) {
 		return nil, docErr
 	}
 	games := make([]domain.Game, 0)
-	doc.Find("table.data").Each(func(i int, data *goquery.Selection) {
+	doc.Find(resultDataSelector).Each(func(i int, data *goquery.Selection) {
 		data.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
 			title := resultItem.Find("a[href^='/webOPACClient/singleHit']").Text()
-			available := isAvailable(resultItem.Find("span").Text())
-			games = append(games, domain.Game{Title: title})
-			fmt.Printf("%s : %t\n", title, available)
+			fmt.Println(resultItem.Find("span").Text())
+			if isAvailable(resultItem.Find("span").Text()) {
+				games = append(games, domain.Game{Title: title})
+			}
 		})
-
 	})
 	return games, nil
 }

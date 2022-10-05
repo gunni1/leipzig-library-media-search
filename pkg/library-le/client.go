@@ -34,13 +34,13 @@ func (libClient Client) FindAvailabelGames(branchCode int, console string) []dom
 		return nil
 	}
 	defer response.Body.Close()
-	//body, _ := io.ReadAll(response.Body)
 
-	//INSERT Response processing here
-	parseSearchResult(response)
-	//fmt.Println(string(body))
-
-	return nil
+	games, parseResultErr := parseSearchResult(response)
+	if parseResultErr != nil {
+		log.Fatalln(parseResultErr)
+		return nil
+	}
+	return games
 }
 
 func createSearchRequest(branchCode int, searchString string, jSessionId string, userSessionId string) *http.Request {
