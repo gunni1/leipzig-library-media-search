@@ -25,7 +25,6 @@ func (libClient Client) FindAvailabelGames(branchCode int, console string) []dom
 		fmt.Println(sessionErr)
 		return nil
 	}
-
 	request := createSearchRequest(branchCode, console, libClient.session.jSessionId, libClient.session.userSessionId)
 	httpClient := http.Client{}
 	response, err := httpClient.Do(request)

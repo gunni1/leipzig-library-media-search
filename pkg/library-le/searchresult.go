@@ -1,7 +1,6 @@
 package libraryle
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -13,6 +12,7 @@ import (
 const (
 	resultItemSelector string = "td[style*='width:100%']"
 	resultDataSelector string = "table.data"
+	gameTitleSelector  string = "a[href^='/webOPACClient/singleHit']"
 )
 
 // Takes a http.Response from a webopac search and
@@ -26,8 +26,7 @@ func parseSearchResult(searchResult *http.Response) ([]domain.Game, error) {
 	games := make([]domain.Game, 0)
 	doc.Find(resultDataSelector).Each(func(i int, data *goquery.Selection) {
 		data.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
-			title := resultItem.Find("a[href^='/webOPACClient/singleHit']").Text()
-			fmt.Println(resultItem.Find("span").Text())
+			title := resultItem.Find(gameTitleSelector).Text()
 			if isAvailable(resultItem.Find("span").Text()) {
 				games = append(games, domain.Game{Title: title})
 			}
@@ -36,9 +35,7 @@ func parseSearchResult(searchResult *http.Response) ([]domain.Game, error) {
 	return games, nil
 }
 
-// Response is either:
-// "Ein oder mehrere Exemplare dieses Titels sind in der aktuellen Zweigstelle ausleihbar." or
-// "Der gewählte Titel ist in der aktuellen Zweigstelle entliehen."
+// See tests for all possible response codes
 func isAvailable(responseCode string) bool {
-	return strings.Contains(responseCode, "ausleihbar")
+	return strings.Contains(responseCode, "ausleihbar") || strings.Contains(responseCode, "heute zurückgebucht")
 }

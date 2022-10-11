@@ -44,6 +44,7 @@ Volständiges Beispiel:
 
 |Code   | Bibliothek                    |
 |-      |-                              |
+|0      |Stadtbibliothek                |
 |20     |Bibliothek Plagwitz            |
 |21     |Bibliothek Wiederitzsch        |
 |22     |Bibliothek Böhlitz-Ehrenberg   |
@@ -60,7 +61,3 @@ Volständiges Beispiel:
 |83     |Bibliothek Grünau-Nord         |   							
 |84     |Bibliothek Grünau-Süd          |   							
 |90     |Fahrbibliothek                 |   		
-
-## Verarbeitung der Suchergebnisse 
-
-Das Ergebnis der 
