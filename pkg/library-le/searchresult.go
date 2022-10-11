@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gunni1/game-index-library-le/pkg/domain"
+	"github.com/gunni1/leipzig-library-game-stock-api/pkg/domain"
 )
 
 const (

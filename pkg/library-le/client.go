@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gunni1/game-index-library-le/pkg/domain"
+	"github.com/gunni1/leipzig-library-game-stock-api/pkg/domain"
 )
 
 type Client struct {
