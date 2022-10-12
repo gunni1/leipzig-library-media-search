@@ -19,13 +19,13 @@ type webOpacSession struct {
 	userSessionId string
 }
 
-func (libClient Client) FindAvailabelGames(branchCode int, console string) []domain.Game {
+func (libClient Client) FindAvailabelGames(branchCode int, platform string) []domain.Game {
 	sessionErr := libClient.openSession()
 	if sessionErr != nil {
 		fmt.Println(sessionErr)
 		return nil
 	}
-	request := createSearchRequest(branchCode, console, libClient.session.jSessionId, libClient.session.userSessionId)
+	request := createSearchRequest(branchCode, platform, libClient.session.jSessionId, libClient.session.userSessionId)
 	httpClient := http.Client{}
 	response, err := httpClient.Do(request)
 	if err != nil {
