@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -21,7 +20,6 @@ func RegisterRoutes(router *gin.Engine) {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		fmt.Println(params)
 		platform, encErr := url.QueryUnescape(params.Platform)
 		if encErr != nil {
 			c.AbortWithError(http.StatusBadRequest, encErr)
