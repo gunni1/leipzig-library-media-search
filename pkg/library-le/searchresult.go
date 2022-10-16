@@ -17,7 +17,7 @@ const (
 
 // Takes a http.Response from a webopac search and
 // try to parse it to an array of games that are listed as available.
-func parseSearchResult(searchResult *http.Response) ([]domain.Game, error) {
+func parseSearchResult(searchResult *http.Response, branchCode int) ([]domain.Game, error) {
 	doc, docErr := goquery.NewDocumentFromReader(searchResult.Body)
 	if docErr != nil {
 		log.Fatal("Could not create document from response.")
@@ -28,7 +28,7 @@ func parseSearchResult(searchResult *http.Response) ([]domain.Game, error) {
 		data.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
 			title := resultItem.Find(gameTitleSelector).Text()
 			if isAvailable(resultItem.Find("span").Text()) {
-				games = append(games, domain.Game{Title: title})
+				games = append(games, domain.Game{Title: title, Branch: BranchCodes[branchCode]})
 			}
 		})
 	})

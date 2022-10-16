@@ -10,6 +10,34 @@ import (
 	"github.com/gunni1/leipzig-library-game-stock-api/pkg/domain"
 )
 
+var BranchCodes = map[int]string{
+	0:  "Stadtbibliothek",
+	20: "Bibliothek Plagwitz",
+	21: "Bibliothek Wiederitzsch",
+	22: "Bibliothek Böhlitz-Ehrenberg",
+	23: "Bibl. Lützschena-Stahmeln",
+	25: "Bibliothek Holzhausen",
+	30: "Bibliothek Südvorstadt",
+	41: "Bibliothek Gohlis",
+	50: "Bibliothek Volkmarsdorf",
+	51: "Bibliothek Schönefeld",
+	60: "Bibliothek Paunsdorf",
+	61: "Bibliothek Reudnitz",
+	70: "Bibliothek Mockau",
+	82: "Bibliothek Grünau-Mitte",
+	83: "Bibliothek Grünau-Nord",
+	84: "Bibliothek Grünau-Süd",
+	90: "Fahrbibliothek",
+}
+
+func BranchCodeKeys() []int {
+	keys := make([]int, 0, len(BranchCodes))
+	for key := range BranchCodes {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
 type Client struct {
 	session webOpacSession
 }
@@ -34,7 +62,7 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 	}
 	defer response.Body.Close()
 
-	games, parseResultErr := parseSearchResult(response)
+	games, parseResultErr := parseSearchResult(response, branchCode)
 	if parseResultErr != nil {
 		log.Fatalln(parseResultErr)
 		return nil
