@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/gunni1/leipzig-library-game-stock-api/pkg/domain"
 )
@@ -68,6 +69,33 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 		return nil
 	}
 	return games
+}
+
+func (libClient Client) GetAllAvailableGamesPlatform(platform string) []domain.Game {
+	searchResults := make(chan domain.Game)
+
+	wg := &sync.WaitGroup{}
+	for _, code := range BranchCodeKeys() {
+		wg.Add(1)
+		go getAvailableGames(code, platform, searchResults, wg, libClient)
+	}
+	go func() {
+		wg.Wait()
+		close(searchResults)
+	}()
+	games := make([]domain.Game, 0)
+	for game := range searchResults {
+		games = append(games, game)
+	}
+	return games
+}
+
+func getAvailableGames(branchCode int, platform string, results chan domain.Game, wg *sync.WaitGroup, client Client) {
+	defer wg.Done()
+	games := client.FindAvailabelGames(branchCode, platform)
+	for _, game := range games {
+		results <- game
+	}
 }
 
 func createSearchRequest(branchCode int, searchString string, jSessionId string, userSessionId string) *http.Request {
