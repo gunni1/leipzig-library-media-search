@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gunni1/leipzig-library-game-stock-api/pkg/api"
+	"github.com/gunni1/leipzig-library-game-stock-api/api"
 )
 
 func main() {

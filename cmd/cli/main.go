@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/gunni1/leipzig-library-game-stock-api/pkg/domain"
-	libClient "github.com/gunni1/leipzig-library-game-stock-api/pkg/library-le"
+	"github.com/gunni1/leipzig-library-game-stock-api/domain"
+	libClient "github.com/gunni1/leipzig-library-game-stock-api/library-le"
 )
 
 func main() {

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/gunni1/leipzig-library-game-stock-api/pkg/domain"
+	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 )
 
 var BranchCodes = map[int]string{
