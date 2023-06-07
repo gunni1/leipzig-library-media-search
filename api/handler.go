@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"github.com/gin-gonic/gin"
-	libClient "github.com/gunni1/leipzig-library-game-stock-api/pkg/library-le"
+	libClient "github.com/gunni1/leipzig-library-game-stock-api/library-le"
 )
 
 func RegisterRoutes(router *gin.Engine) {
