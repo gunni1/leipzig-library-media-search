@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -25,8 +27,16 @@ func main() {
 	bot.Handle("/start", command.WelcomeCommand)
 	bot.Handle("/list", command.ListBranchPlattformCommand)
 
+	go setupHealthEndpoint()
 	log.Println("Bot Ready.")
 	bot.Start()
+}
+
+func setupHealthEndpoint() {
+	http.HandleFunc("/state", func(writer http.ResponseWriter, req *http.Request) {
+		fmt.Fprintln(writer, "ready")
+	})
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func parseEnvMandatory(variableKey string) string {
