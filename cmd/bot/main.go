@@ -33,7 +33,7 @@ func main() {
 }
 
 func setupHealthEndpoint() {
-	http.HandleFunc("/state", func(writer http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(writer, "ready")
 	})
 	log.Fatal(http.ListenAndServe(":8080", nil))
