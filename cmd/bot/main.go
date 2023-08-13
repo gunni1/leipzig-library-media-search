@@ -24,6 +24,8 @@ func main() {
 		return
 	}
 
+	//welcomeCommand := command.BotCommand{Prefix: "/start", Description: "Zeigt die Liste aller Bot-Funktionen an."}
+
 	bot.Handle("/start", command.WelcomeCommand)
 	bot.Handle("/list", command.ListBranchPlattformCommand)
 

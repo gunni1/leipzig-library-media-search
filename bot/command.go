@@ -5,9 +5,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 	libClient "github.com/gunni1/leipzig-library-game-stock-api/library-le"
 	tele "gopkg.in/telebot.v3"
 )
+
+type BotCommand struct {
+	Prefix      string
+	Description string
+}
 
 // Listet alle Videospiele einer bestimmten Platform die aktuell in einer Zweigstelle Ausleihbar sind.
 func ListBranchPlattformCommand(ctx tele.Context) error {
@@ -19,20 +25,29 @@ func ListBranchPlattformCommand(ctx tele.Context) error {
 
 	games := client.FindAvailabelGames(branchCode, platform)
 	//TODO: func zum Umwandeln der Games-Liste in den Ergebnistext. Berücksichtigen, wenn Ergebniss leer ist!
-	var replyBuilder strings.Builder
-	//replyBuilder.WriteString(fmt.Sprintf("Spiele für %s in %s:\n", platform, libClient.BranchCodes[branchCode]))
-	for _, game := range games {
-		replyBuilder.WriteString(game.Title)
-		replyBuilder.WriteString("\n")
 
-	}
-	return ctx.Send(replyBuilder.String())
+	//replyBuilder.WriteString(fmt.Sprintf("Spiele für %s in %s:\n", platform, libClient.BranchCodes[branchCode]))
+	reply := formatReply(games)
+	return ctx.Send(reply)
 }
 
 func WelcomeCommand(ctx tele.Context) error {
 	var replyBuilder strings.Builder
-
+	replyBuilder.WriteString("Hi")
 	return ctx.Send(replyBuilder.String())
+}
+
+// Erzeugt eine formatierte Ausgabe einer Liste von Titeln oder eine entsprechene Rückgabe bei leerer Liste.
+func formatReply(games []domain.Game) string {
+	if len(games) == 0 {
+		return "Es wurden keine ausleihbaren Titel gefunden."
+	}
+	var replyBuilder strings.Builder
+	for _, game := range games {
+		replyBuilder.WriteString(game.Title)
+		replyBuilder.WriteString("\n")
+	}
+	return replyBuilder.String()
 }
 
 // Holt aus den Command-Args die Platform und die Zweigstelle, oder liefert einen Fehlertext.
