@@ -124,6 +124,7 @@ func createSearchRequest(branchCode int, searchString string, jSessionId string,
 	query.Add("CSId", userSessionId)
 	query.Add("searchString[0]", searchString)
 	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
 	request.URL.RawQuery = query.Encode()
 	return request
 }
