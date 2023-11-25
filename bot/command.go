@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,22 @@ import (
 type BotCommand struct {
 	Prefix      string
 	Description string
+}
+
+// Listet alle verfügbaren Switch-Spiele in einer bestimmten Zweigstelle.
+func ListSwitchCommand(ctx tele.Context) error {
+	client := libClient.Client{}
+	if len(ctx.Args()) < 1 {
+		return ctx.Reply("Bitte Zweigstelle angeben.")
+	}
+	branchArg := ctx.Args()[0]
+	branchCode, pres := libClient.GetBranchCode(branchArg)
+	if !pres {
+		return ctx.Reply(fmt.Sprintf("Zweigstelle %s existiert nicht.", branchArg))
+	}
+	games := client.FindAvailabelGames(branchCode, "switch")
+	reply := formatReply(games)
+	return ctx.Send(reply)
 }
 
 // Listet alle Videospiele einer bestimmten Platform die aktuell in einer Zweigstelle Ausleihbar sind.
