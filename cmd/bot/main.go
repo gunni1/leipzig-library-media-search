@@ -28,6 +28,7 @@ func main() {
 
 	bot.Handle("/start", command.WelcomeCommand)
 	bot.Handle("/list", command.ListBranchPlattformCommand)
+	bot.Handle("/switch", command.ListSwitchCommand)
 
 	go setupHealthEndpoint()
 	log.Println("Bot Ready.")

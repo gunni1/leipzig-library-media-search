@@ -31,8 +31,8 @@ Weitere Parameter:
 |-                          |-                                      | -                     |
 |CSId                       | USERSESSIONID                         | 1991N87S0583b9ce8380deec85603fd2da7803777dc9d087 |
 |searchString               | Schlüsselwort für die Suche           | Nintendo+Switch       |
-|selectedViewBranchlib      | Bibliothekszweigstelle für ???        | 0 (Stadtbibliothek)   |
-|selectedSearchBranchlib    | Bibliothekszweigstelle für Abholung   | 41 (Gohlis)           |
+|selectedViewBranchlib      | Bibliothekszweigstelle für Suche      | 41                    |
+|selectedSearchBranchlib    | Bibliothekszweigstelle für Abholung   | 41                    |
 |timeOut                    | Timeout der Suchanfrage in Sekunden   | 20                    |
 |numberOfHits               | Anzahl der Ergebnisse je Seite        | 100                   |
 
