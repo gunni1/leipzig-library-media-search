@@ -2,7 +2,7 @@
 
 build-web:
 	go build ./...
-	go build -o bin/web cmd/web/main.go
+	go build -o bin/web main.go
 
 build-cli:
 	go build ./...
