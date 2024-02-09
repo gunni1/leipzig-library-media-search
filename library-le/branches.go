@@ -10,7 +10,7 @@ var branchNames = map[string]int{
 	"lützschena":      23,
 	"holzhausen":      25,
 	"südvorstadt":     30,
-	"gholis":          41,
+	"gohlis":          41,
 	"volkmarsdorf":    50,
 	"schönefeld":      51,
 	"paunsdorf":       60,

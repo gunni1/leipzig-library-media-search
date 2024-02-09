@@ -1,8 +1,8 @@
 .PHONY: build clean
 
-build-bot:
+build-web:
 	go build ./...
-	go build -o bin/bot cmd/bot/main.go
+	go build -o bin/web main.go
 
 build-cli:
 	go build ./...
