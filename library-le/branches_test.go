@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetBranchCodeSuccess(t *testing.T) {
-	branchNameQuery := "gholis"
+	branchNameQuery := "gohlis"
 	result, present := GetBranchCode(branchNameQuery)
 	True(t, present)
 	Equal(t, result, 41)

@@ -2,6 +2,7 @@
 
 build-web:
 	go build ./...
+	go test ./...
 	go build -o bin/web main.go
 
 build-cli:
