@@ -7,16 +7,15 @@ ENV CGO_ENABLED=0
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-COPY cmd/server/main.go ./
-COPY pkg ./pkg
+COPY . ./
+
 RUN go mod download
-RUN go build -o lib-api
+RUN go build -o web
 
 # Stage Run
 FROM alpine:latest
 WORKDIR /app
-COPY --from=build /app/lib-api .
-RUN chmod +x lib-api
-CMD ["./lib-api"]
-EXPOSE 8080
+COPY --from=build /app/web .
+RUN chmod +x web
+CMD ["./web"]
+EXPOSE 3000
