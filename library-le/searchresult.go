@@ -1,8 +1,8 @@
 package libraryle
 
 import (
+	"io"
 	"log"
-	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
@@ -14,10 +14,10 @@ const (
 	availabilitySelector string = "span[class^=textgruen]"
 )
 
-// Takes a http.Response from a webopac search and
+// Takes a html as reader from a webopac search and
 // try to parse it to an array of games that are listed as available.
-func parseSearchResult(searchResult *http.Response, branchCode int) ([]domain.Game, error) {
-	doc, docErr := goquery.NewDocumentFromReader(searchResult.Body)
+func parseSearchResult(searchResult io.Reader) ([]domain.Game, error) {
+	doc, docErr := goquery.NewDocumentFromReader(searchResult)
 	if docErr != nil {
 		log.Fatal("Could not create document from response.")
 		return nil, docErr
@@ -26,7 +26,7 @@ func parseSearchResult(searchResult *http.Response, branchCode int) ([]domain.Ga
 	doc.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
 		title := resultItem.Find(gameTitleSelector).Text()
 		if isAvailable(resultItem.Parent()) {
-			games = append(games, domain.Game{Title: title, Branch: BranchCodes[branchCode]})
+			games = append(games, domain.Game{Title: title})
 		}
 	})
 	return games, nil

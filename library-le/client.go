@@ -63,7 +63,8 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 	}
 	defer response.Body.Close()
 
-	games, parseResultErr := parseSearchResult(response, branchCode)
+	games, parseResultErr := parseSearchResult(response.Body)
+	//Add branchCode to games?
 	if parseResultErr != nil {
 		log.Fatalln(parseResultErr)
 		return nil
