@@ -18,4 +18,4 @@ WORKDIR /app
 COPY --from=build /app/web .
 RUN chmod +x web
 CMD ["./web"]
-EXPOSE 3000
+EXPOSE 8080
