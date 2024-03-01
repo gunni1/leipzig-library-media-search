@@ -1,46 +1,18 @@
 package main
 
 import (
-	"embed"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
-	"strings"
-	"text/template"
 
-	"github.com/gunni1/leipzig-library-game-stock-api/domain"
-	libClient "github.com/gunni1/leipzig-library-game-stock-api/library-le"
+	"github.com/gunni1/leipzig-library-game-stock-api/web"
 )
 
-//go:embed templates
-var htmlTemplates embed.FS
-
-func indexHandler(respWriter http.ResponseWriter, request *http.Request) {
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/index.html"))
-	templ.Execute(respWriter, nil)
-}
-
-func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
-	log.Print("received htmx game-index")
-	branch := strings.ToLower(request.PostFormValue("branch"))
-	platform := strings.ToLower(request.PostFormValue("platform"))
-	branchCode, exists := libClient.GetBranchCode(branch)
-	if !exists {
-		log.Printf("Requested branch: %s does not exists.", branch)
-		return
-	}
-	client := libClient.Client{}
-	games := client.FindAvailabelGames(branchCode, platform)
-	data := map[string][]domain.Game{
-		"Games": games,
-	}
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games.html"))
-	templ.Execute(respWriter, data)
-}
-
 func main() {
-	mux := http.NewServeMux()
+	port := flag.Int("port", 8080, "Webserver Port")
+	flag.Parse()
 
-	mux.HandleFunc("/", indexHandler)
-	mux.HandleFunc("/game-index/", gameIndexHandler)
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	mux := web.InitMux()
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), mux))
 }
