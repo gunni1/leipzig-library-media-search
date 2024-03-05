@@ -15,10 +15,7 @@ import (
 //go:embed templates
 var htmlTemplates embed.FS
 
-type Server struct {
-	Mux *http.ServeMux
-}
-
+// Create Mux and setup routes
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", indexHandler)
