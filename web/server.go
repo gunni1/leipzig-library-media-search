@@ -2,6 +2,7 @@ package web
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -31,7 +32,6 @@ func indexHandler(respWriter http.ResponseWriter, request *http.Request) {
 }
 
 func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
-	log.Print("received htmx game-index")
 	branch := strings.ToLower(request.PostFormValue("branch"))
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	branchCode, exists := libClient.GetBranchCode(branch)
@@ -41,6 +41,12 @@ func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	}
 	client := libClient.Client{}
 	games := client.FindAvailabelGames(branchCode, platform)
+
+	if len(games) == 0 {
+		fmt.Fprint(respWriter, "<p>Es wurden keine ausleihbaren Titel gefunden.</p>")
+		return
+	}
+
 	data := map[string][]domain.Game{
 		"Games": games,
 	}
