@@ -18,17 +18,28 @@ var htmlTemplates embed.FS
 // Create Mux and setup routes
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", indexHandler)
-	mux.HandleFunc("/game-index/", gameIndexHandler)
+	mux.HandleFunc("GET /games/", gamesIndexHandler)
+	mux.HandleFunc("GET /movies/", movieHandler)
+	mux.HandleFunc("POST /games-search/", gameSearchHandler)
+	mux.HandleFunc("POST /movies-search/", movieSearchHandler)
 	return mux
 }
 
-func indexHandler(respWriter http.ResponseWriter, request *http.Request) {
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/index.html"))
+func gamesIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
+	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games.html"))
 	templ.Execute(respWriter, nil)
 }
 
-func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
+func movieHandler(respWriter http.ResponseWriter, request *http.Request) {
+	template := template.Must(template.ParseFS(htmlTemplates, "templates/movies.html"))
+	template.Execute(respWriter, nil)
+}
+
+func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
+	title := strings.ToLower(request.PostFormValue("movie-title"))
+}
+
+func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	branch := strings.ToLower(request.PostFormValue("branch"))
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	branchCode, exists := libClient.GetBranchCode(branch)
@@ -47,6 +58,6 @@ func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	data := map[string][]domain.Game{
 		"Games": games,
 	}
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games.html"))
+	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games-list.html"))
 	templ.Execute(respWriter, data)
 }

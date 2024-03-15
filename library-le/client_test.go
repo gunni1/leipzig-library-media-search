@@ -12,9 +12,9 @@ const (
 )
 
 func TestRequestHasSearchParameters(t *testing.T) {
-
+	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
 	searchString := "Nintendo Switch"
-	result := createSearchRequest(40, searchString, jSessionId, userSessionId)
+	result := createGameSearchRequest(40, searchString, session)
 
 	Equal(t, "submit", result.URL.Query().Get("methodToCall"))
 	Equal(t, "submitSearch", result.URL.Query().Get("methodToCallParameter"))
@@ -30,7 +30,8 @@ func TestRequestHasSearchParameters(t *testing.T) {
 }
 
 func TestRequestHasCookiesSet(t *testing.T) {
-	result := createSearchRequest(40, "Nintendo Switch", jSessionId, userSessionId)
+	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
+	result := createGameSearchRequest(40, "Nintendo Switch", session)
 
 	Equal(t, 2, len(result.Cookies()))
 

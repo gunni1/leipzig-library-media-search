@@ -1,6 +1,6 @@
 module github.com/gunni1/leipzig-library-game-stock-api
 
-go 1.21
+go 1.22
 
 require github.com/stretchr/testify v1.8.3
 
