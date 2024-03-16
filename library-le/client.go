@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"sync"
 
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 )
 
+const (
+	LIB_BASE_URL = "https://webopac.stadtbibliothek-leipzig.de"
+)
+
+// Deprecated?
 var BranchCodes = map[int]string{
 	0:  "Stadtbibliothek",
 	20: "Bibliothek Plagwitz",
@@ -31,6 +34,7 @@ var BranchCodes = map[int]string{
 	90: "Fahrbibliothek",
 }
 
+// Deprecated?
 func BranchCodeKeys() []int {
 	keys := make([]int, 0, len(BranchCodes))
 	for key := range BranchCodes {
@@ -71,7 +75,7 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 	return games
 }
 
-func (libClient Client) FindMovie(title string) []domain.Movie {
+func (libClient Client) FindMovies(title string) []domain.Movie {
 	sessionErr := libClient.openSession()
 	if sessionErr != nil {
 		fmt.Println(sessionErr)
@@ -86,107 +90,21 @@ func (libClient Client) FindMovie(title string) []domain.Movie {
 	}
 	//Titel und Links aus den Ergebnissen extrahieren
 	resultTitles := parseMovieSearch(searchResponse.Body)
+	log.Println(resultTitles)
+
 	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
 	return nil
 }
 
-// Nicht mehr benötigt TODO: Löschen
-func (libClient Client) GetAllAvailableGamesPlatform(platform string) []domain.Game {
-	searchResults := make(chan domain.Game)
-
-	wg := &sync.WaitGroup{}
-	for _, code := range BranchCodeKeys() {
-		wg.Add(1)
-		go getAvailableGames(code, platform, searchResults, wg, libClient)
-	}
-	go func() {
-		wg.Wait()
-		close(searchResults)
-	}()
-	games := make([]domain.Game, 0)
-	for game := range searchResults {
-		games = append(games, game)
-	}
-	return games
-}
-
-func getAvailableGames(branchCode int, platform string, results chan domain.Game, wg *sync.WaitGroup, client Client) {
-	defer wg.Done()
-	games := client.FindAvailabelGames(branchCode, platform)
-	for _, game := range games {
-		results <- game
-	}
-}
-
-func createMovieSearchRequest(searchString string, libSession webOpacSession) *http.Request {
-	request := createSearchRequest(libSession)
-	createMovieSearchQuery(*request, searchString, libSession.userSessionId)
-	return request
-}
-
-func createMovieSearchQuery(request http.Request, searchString string, userSessionId string) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("searchString[0]", searchString)
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(0), 10))
-	//Search for category title
-	query.Add("searchCategories[0]", "331")
-	//Restrict search to dvd/bluray
-	query.Add("searchRestrictionID[2]", "3")
-	query.Add("searchRestrictionValue1[2]", "29")
-
-	return query.Encode()
-}
-
-func createGameIndexQuery(request http.Request, platform string, userSessionId string, branchCode int) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	//Search the platform as a catchword
-	query.Add("searchString[0]", platform)
-	query.Add("searchCategories[0]", "902")
-
-	return query.Encode()
-}
-
-func createSearchRequest(libSession webOpacSession) *http.Request {
-	request, _ := http.NewRequest("GET", "https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do", nil)
-	jSessionCookie := &http.Cookie{
-		Name:  "JSESSIONID",
-		Value: libSession.jSessionId,
-	}
-	userSessionCookie := &http.Cookie{
-		Name:  "USERSESSIONID",
-		Value: libSession.userSessionId,
-	}
-	request.AddCookie(jSessionCookie)
-	request.AddCookie(userSessionCookie)
-	return request
-}
-
-func createGameSearchRequest(branchCode int, platform string, libSession webOpacSession) *http.Request {
-	request := createSearchRequest(libSession)
-	request.URL.RawQuery = createGameIndexQuery(*request, platform, libSession.userSessionId, branchCode)
-	return request
+// Load all existing copys of a result title over all library branches
+func (result searchResult) loadMovieInstance(libSession webOpacSession) []domain.Movie {
+	request, _ := http.NewRequest("GET", LIB_BASE_URL+result.resultUrl, nil)
+	//TODO: für ein Result die verfügbaren exemplare laden und movie objekte erzeugen
+	return nil
 }
 
 func (client *Client) openSession() error {
-	resp, err := http.Get("https://webopac.stadtbibliothek-leipzig.de/webOPACClient")
+	resp, err := http.Get(LIB_BASE_URL + "/webOPACClient")
 	if err != nil {
 		return err
 	}

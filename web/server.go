@@ -37,6 +37,8 @@ func movieHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	title := strings.ToLower(request.PostFormValue("movie-title"))
+	client := libClient.Client{}
+	client.FindMovies(title)
 }
 
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
