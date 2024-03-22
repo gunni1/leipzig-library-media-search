@@ -12,6 +12,7 @@ const (
 	resultItemSelector   string = "h2[class^=recordtitle]"
 	titleSelector        string = "a[href^='/webOPACClient/singleHit']"
 	availabilitySelector string = "span[class^=textgruen]"
+	copiesSelector       string = "div[id='tab-content']/div/div[position()>1]"
 )
 
 type searchResult struct {
@@ -21,7 +22,7 @@ type searchResult struct {
 
 // Takes a html as reader from a webopac search and
 // try to parse it to an array of games that are listed as available.
-func parseSearchResult(searchResult io.Reader) ([]domain.Game, error) {
+func parseGameSearchResult(searchResult io.Reader) ([]domain.Game, error) {
 	doc, docErr := goquery.NewDocumentFromReader(searchResult)
 	if docErr != nil {
 		log.Println("Could not create document from response.")
@@ -54,4 +55,23 @@ func parseMovieSearch(searchResponse io.Reader) []searchResult {
 		titles = append(titles, searchResult{title: title, resultUrl: resultUrl})
 	})
 	return titles
+}
+
+func parseMovieCopiesPage(page io.Reader) []domain.Movie {
+	doc, docErr := goquery.NewDocumentFromReader(page)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return nil
+	}
+	//movies := make([]domain.Movie, 0)
+	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
+		//XPath für jedes relevante Attribut definieren
+		mediaNum := copy.Get(1)
+		branch := copy.Get(2)
+		status := copy.Get(4)
+		log.Printf("%s %s %s\n", mediaNum.Data, branch.Data, status.Data)
+
+	})
+
+	return nil
 }

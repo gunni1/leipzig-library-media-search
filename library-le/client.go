@@ -67,7 +67,7 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 	}
 	defer response.Body.Close()
 
-	games, parseResultErr := parseSearchResult(response.Body)
+	games, parseResultErr := parseGameSearchResult(response.Body)
 	if parseResultErr != nil {
 		log.Fatalln(parseResultErr)
 		return nil
@@ -97,8 +97,12 @@ func (libClient Client) FindMovies(title string) []domain.Movie {
 }
 
 // Load all existing copys of a result title over all library branches
-func (result searchResult) loadMovieInstance(libSession webOpacSession) []domain.Movie {
-	request, _ := http.NewRequest("GET", LIB_BASE_URL+result.resultUrl, nil)
+func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Movie {
+	//request := createRequest(libSession, result.resultUrl)
+
+	//httpClient := http.Client{}
+	//movieResponse, err := httpClient.Do(request)
+
 	//TODO: für ein Result die verfügbaren exemplare laden und movie objekte erzeugen
 	return nil
 }

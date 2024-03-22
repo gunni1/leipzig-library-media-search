@@ -5,9 +5,8 @@ import (
 	"strconv"
 )
 
-// Basic search request with session cookies set.
-func createSearchRequest(libSession webOpacSession) *http.Request {
-	request, _ := http.NewRequest("GET", LIB_BASE_URL+"/webOPACClient/search.do", nil)
+func createRequest(libSession webOpacSession, path string) *http.Request {
+	request, _ := http.NewRequest("GET", LIB_BASE_URL+path, nil)
 	jSessionCookie := &http.Cookie{
 		Name:  "JSESSIONID",
 		Value: libSession.jSessionId,
@@ -22,13 +21,13 @@ func createSearchRequest(libSession webOpacSession) *http.Request {
 }
 
 func createMovieSearchRequest(searchString string, libSession webOpacSession) *http.Request {
-	request := createSearchRequest(libSession)
+	request := createRequest(libSession, "/webOPACClient/search.do")
 	request.URL.RawQuery = createMovieSearchQuery(*request, searchString, libSession.userSessionId)
 	return request
 }
 
 func createGameSearchRequest(branchCode int, platform string, libSession webOpacSession) *http.Request {
-	request := createSearchRequest(libSession)
+	request := createRequest(libSession, "/webOPACClient/search.do")
 	request.URL.RawQuery = createGameIndexQuery(*request, platform, libSession.userSessionId, branchCode)
 	return request
 }
@@ -50,7 +49,6 @@ func createMovieSearchQuery(request http.Request, searchString string, userSessi
 	//Restrict search to dvd/bluray
 	query.Add("searchRestrictionID[2]", "3")
 	query.Add("searchRestrictionValue1[2]", "29")
-
 	return query.Encode()
 }
 
@@ -58,7 +56,6 @@ func createGameIndexQuery(request http.Request, platform string, userSessionId s
 	query := request.URL.Query()
 	query.Add("methodToCall", "submit")
 	query.Add("methodToCallParameter", "submitSearch")
-
 	query.Add("submitSearch", "Suchen")
 	query.Add("callingPage", "searchPreferences")
 	query.Add("numberOfHits", "500")
