@@ -90,21 +90,26 @@ func (libClient Client) FindMovies(title string) []domain.Movie {
 	}
 	//Titel und Links aus den Ergebnissen extrahieren
 	resultTitles := parseMovieSearch(searchResponse.Body)
-	log.Println(resultTitles)
 
+	movies := make([]domain.Movie, 0)
+	for _, resultTitle := range resultTitles {
+		movies = append(movies, resultTitle.loadMovieCopies(libClient.session)...)
+	}
 	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
-	return nil
+	return movies
 }
 
 // Load all existing copys of a result title over all library branches
 func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Movie {
-	//request := createRequest(libSession, result.resultUrl)
+	request := createRequest(libSession, result.resultUrl)
 
-	//httpClient := http.Client{}
-	//movieResponse, err := httpClient.Do(request)
-
-	//TODO: für ein Result die verfügbaren exemplare laden und movie objekte erzeugen
-	return nil
+	httpClient := http.Client{}
+	movieResponse, err := httpClient.Do(request)
+	if err != nil {
+		log.Println("error during search")
+		return nil
+	}
+	return parseMovieCopiesPage(result.title, movieResponse.Body)
 }
 
 func (client *Client) openSession() error {

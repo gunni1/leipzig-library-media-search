@@ -3,6 +3,7 @@ package libraryle
 import (
 	"io"
 	"log"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
@@ -12,7 +13,7 @@ const (
 	resultItemSelector   string = "h2[class^=recordtitle]"
 	titleSelector        string = "a[href^='/webOPACClient/singleHit']"
 	availabilitySelector string = "span[class^=textgruen]"
-	copiesSelector       string = "div[id='tab-content']/div/div[position()>1]"
+	copiesSelector       string = "#tab-content > div > div:nth-child(n+2)"
 )
 
 type searchResult struct {
@@ -31,14 +32,14 @@ func parseGameSearchResult(searchResult io.Reader) ([]domain.Game, error) {
 	games := make([]domain.Game, 0)
 	doc.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
 		title := resultItem.Find(titleSelector).Text()
-		if isAvailable(resultItem.Parent()) {
+		if isGameAvailable(resultItem.Parent()) {
 			games = append(games, domain.Game{Title: title})
 		}
 	})
 	return games, nil
 }
 
-func isAvailable(searchHitNode *goquery.Selection) bool {
+func isGameAvailable(searchHitNode *goquery.Selection) bool {
 	return len(searchHitNode.Find(availabilitySelector).Nodes) > 0
 }
 
@@ -57,21 +58,29 @@ func parseMovieSearch(searchResponse io.Reader) []searchResult {
 	return titles
 }
 
-func parseMovieCopiesPage(page io.Reader) []domain.Movie {
+func parseMovieCopiesPage(title string, page io.Reader) []domain.Movie {
 	doc, docErr := goquery.NewDocumentFromReader(page)
 	if docErr != nil {
 		log.Println("Could not create document from response.")
 		return nil
 	}
-	//movies := make([]domain.Movie, 0)
-	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
-		//XPath für jedes relevante Attribut definieren
-		mediaNum := copy.Get(1)
-		branch := copy.Get(2)
-		status := copy.Get(4)
-		log.Printf("%s %s %s\n", mediaNum.Data, branch.Data, status.Data)
+	movies := make([]domain.Movie, 0)
 
+	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
+		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
+		status := isMovieAvailable(copy)
+		movies = append(movies, domain.Movie{Title: title, Branch: branch, IsAvailable: status})
 	})
 
-	return nil
+	return movies
+}
+
+func isMovieAvailable(copy *goquery.Selection) bool {
+	rentalStateLink := copy.Find("div:nth-child(5) > div > a")
+	//Link indicates a rented state (can reserve a copy)
+	if rentalStateLink.Length() != 0 {
+		return false
+	}
+	statusText := copy.Find("div:nth-child(5)").Text()
+	return strings.Contains(statusText, "ausleihbar")
 }

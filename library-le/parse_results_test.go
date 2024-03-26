@@ -23,8 +23,16 @@ func TestAvailability(t *testing.T) {
 
 func TestParseMovieCopiesResult(t *testing.T) {
 	testResponse := loadTestData("movie_copies_example.html")
-	movies := parseMovieCopiesPage(testResponse)
+	movies := parseMovieCopiesPage("Terminator - Genesis", testResponse)
 	Equal(t, 6, len(movies))
+
+	available := 0
+	for _, movie := range movies {
+		if movie.IsAvailable {
+			available++
+		}
+	}
+	Equal(t, 2, available)
 }
 
 func loadTestData(filePath string) io.Reader {
