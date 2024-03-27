@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"sync"
 
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 )
 
+const (
+	LIB_BASE_URL = "https://webopac.stadtbibliothek-leipzig.de"
+)
+
+// Deprecated?
 var BranchCodes = map[int]string{
 	0:  "Stadtbibliothek",
 	20: "Bibliothek Plagwitz",
@@ -31,6 +34,7 @@ var BranchCodes = map[int]string{
 	90: "Fahrbibliothek",
 }
 
+// Deprecated?
 func BranchCodeKeys() []int {
 	keys := make([]int, 0, len(BranchCodes))
 	for key := range BranchCodes {
@@ -54,17 +58,16 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 		fmt.Println(sessionErr)
 		return nil
 	}
-	request := createSearchRequest(branchCode, platform, libClient.session.jSessionId, libClient.session.userSessionId)
+	request := createGameSearchRequest(branchCode, platform, libClient.session)
 	httpClient := http.Client{}
 	response, err := httpClient.Do(request)
 	if err != nil {
-		log.Fatal("error during search")
+		log.Println("error during search")
 		return nil
 	}
 	defer response.Body.Close()
 
-	games, parseResultErr := parseSearchResult(response.Body)
-	//Add branchCode to games?
+	games, parseResultErr := parseGameSearchResult(response.Body)
 	if parseResultErr != nil {
 		log.Fatalln(parseResultErr)
 		return nil
@@ -72,66 +75,45 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 	return games
 }
 
-func (libClient Client) GetAllAvailableGamesPlatform(platform string) []domain.Game {
-	searchResults := make(chan domain.Game)
+// Search for a specific movie title in all library branches
+func (libClient Client) FindMovies(title string) []domain.Movie {
+	sessionErr := libClient.openSession()
+	if sessionErr != nil {
+		fmt.Println(sessionErr)
+		return nil
+	}
+	searchRequest := createMovieSearchRequest(title, libClient.session)
+	httpClient := http.Client{}
+	searchResponse, err := httpClient.Do(searchRequest)
+	if err != nil {
+		log.Println("error during search")
+		return nil
+	}
+	resultTitles := parseMovieSearch(searchResponse.Body)
 
-	wg := &sync.WaitGroup{}
-	for _, code := range BranchCodeKeys() {
-		wg.Add(1)
-		go getAvailableGames(code, platform, searchResults, wg, libClient)
+	movies := make([]domain.Movie, 0)
+	for _, resultTitle := range resultTitles {
+		movies = append(movies, resultTitle.loadMovieCopies(libClient.session)...)
 	}
-	go func() {
-		wg.Wait()
-		close(searchResults)
-	}()
-	games := make([]domain.Game, 0)
-	for game := range searchResults {
-		games = append(games, game)
-	}
-	return games
+	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
+	return movies
 }
 
-func getAvailableGames(branchCode int, platform string, results chan domain.Game, wg *sync.WaitGroup, client Client) {
-	defer wg.Done()
-	games := client.FindAvailabelGames(branchCode, platform)
-	for _, game := range games {
-		results <- game
-	}
-}
+// Load all existing copys of a result title over all library branches
+func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Movie {
+	request := createRequest(libSession, result.resultUrl)
 
-func createSearchRequest(branchCode int, searchString string, jSessionId string, userSessionId string) *http.Request {
-	request, _ := http.NewRequest("GET", "https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do", nil)
-	jSessionCookie := &http.Cookie{
-		Name:  "JSESSIONID",
-		Value: jSessionId,
+	httpClient := http.Client{}
+	movieResponse, err := httpClient.Do(request)
+	if err != nil {
+		log.Println("error during search")
+		return nil
 	}
-	userSessionCookie := &http.Cookie{
-		Name:  "USERSESSIONID",
-		Value: userSessionId,
-	}
-	request.AddCookie(jSessionCookie)
-	request.AddCookie(userSessionCookie)
-
-	query := request.URL.Query()
-	//Fix Query Params to make the search working
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-	query.Add("searchCategories[0]", "902")
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	//Query Params dependend on user input / session
-	query.Add("CSId", userSessionId)
-	query.Add("searchString[0]", searchString)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	request.URL.RawQuery = query.Encode()
-	return request
+	return parseMovieCopiesPage(result.title, movieResponse.Body)
 }
 
 func (client *Client) openSession() error {
-	resp, err := http.Get("https://webopac.stadtbibliothek-leipzig.de/webOPACClient")
+	resp, err := http.Get(LIB_BASE_URL + "/webOPACClient")
 	if err != nil {
 		return err
 	}
