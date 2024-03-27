@@ -75,6 +75,7 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 	return games
 }
 
+// Search for a specific movie title in all library branches
 func (libClient Client) FindMovies(title string) []domain.Movie {
 	sessionErr := libClient.openSession()
 	if sessionErr != nil {
@@ -88,7 +89,6 @@ func (libClient Client) FindMovies(title string) []domain.Movie {
 		log.Println("error during search")
 		return nil
 	}
-	//Titel und Links aus den Ergebnissen extrahieren
 	resultTitles := parseMovieSearch(searchResponse.Body)
 
 	movies := make([]domain.Movie, 0)
