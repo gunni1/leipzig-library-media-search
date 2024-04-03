@@ -18,6 +18,8 @@ var htmlTemplates embed.FS
 // Create Mux and setup routes
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /", movieHandler)
 	mux.HandleFunc("GET /games/", gamesIndexHandler)
 	mux.HandleFunc("GET /movies/", movieHandler)
 	mux.HandleFunc("POST /games-search/", gameSearchHandler)
