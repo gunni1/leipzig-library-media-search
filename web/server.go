@@ -19,11 +19,10 @@ var htmlTemplates embed.FS
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", movieHandler)
-	mux.HandleFunc("GET /games/", gamesIndexHandler)
-	mux.HandleFunc("GET /movies/", movieHandler)
-	mux.HandleFunc("POST /games-search/", gameSearchHandler)
-	mux.HandleFunc("POST /movies-search/", movieSearchHandler)
+	mux.HandleFunc("/games/", gamesIndexHandler)
+	mux.HandleFunc("/movies/", movieHandler)
+	mux.HandleFunc("/games-search/", gameSearchHandler)
+	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	return mux
 }
 
