@@ -2,11 +2,7 @@ package libraryle
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
-
-	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 )
 
 const (
@@ -50,66 +46,6 @@ type Client struct {
 type webOpacSession struct {
 	jSessionId    string
 	userSessionId string
-}
-
-func (libClient Client) FindAvailabelGames(branchCode int, platform string) []domain.Game {
-	sessionErr := libClient.openSession()
-	if sessionErr != nil {
-		fmt.Println(sessionErr)
-		return nil
-	}
-	request := createGameSearchRequest(branchCode, platform, libClient.session)
-	httpClient := http.Client{}
-	response, err := httpClient.Do(request)
-	if err != nil {
-		log.Println("error during search")
-		return nil
-	}
-	defer response.Body.Close()
-
-	games, parseResultErr := parseGameSearchResult(response.Body)
-	if parseResultErr != nil {
-		log.Fatalln(parseResultErr)
-		return nil
-	}
-	return games
-}
-
-// Search for a specific movie title in all library branches
-func (libClient Client) FindMovies(title string) []domain.Movie {
-	sessionErr := libClient.openSession()
-	if sessionErr != nil {
-		fmt.Println(sessionErr)
-		return nil
-	}
-	searchRequest := createMovieSearchRequest(title, libClient.session)
-	httpClient := http.Client{}
-	searchResponse, err := httpClient.Do(searchRequest)
-	if err != nil {
-		log.Println("error during search")
-		return nil
-	}
-	resultTitles := parseMovieSearch(searchResponse.Body)
-
-	movies := make([]domain.Movie, 0)
-	for _, resultTitle := range resultTitles {
-		movies = append(movies, resultTitle.loadMovieCopies(libClient.session)...)
-	}
-	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
-	return movies
-}
-
-// Load all existing copys of a result title over all library branches
-func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Movie {
-	request := createRequest(libSession, result.resultUrl)
-
-	httpClient := http.Client{}
-	movieResponse, err := httpClient.Do(request)
-	if err != nil {
-		log.Println("error during search")
-		return nil
-	}
-	return parseMovieCopiesPage(result.title, movieResponse.Body)
 }
 
 func (client *Client) openSession() error {

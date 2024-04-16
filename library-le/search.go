@@ -1,8 +1,10 @@
 package libraryle
 
 import (
+	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -10,10 +12,7 @@ import (
 )
 
 const (
-	resultItemSelector   string = "h2[class^=recordtitle]"
-	titleSelector        string = "a[href^='/webOPACClient/singleHit']"
-	availabilitySelector string = "span[class^=textgruen]"
-	copiesSelector       string = "#tab-content > div > div:nth-child(n+2)"
+	copiesSelector string = "#tab-content > div > div:nth-child(n+2)"
 )
 
 type searchResult struct {
@@ -21,26 +20,41 @@ type searchResult struct {
 	resultUrl string
 }
 
-// Takes a html as reader from a webopac search and
-// try to parse it to an array of games that are listed as available.
-func parseGameSearchResult(searchResult io.Reader) ([]domain.Game, error) {
-	doc, docErr := goquery.NewDocumentFromReader(searchResult)
-	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return nil, docErr
+// Search for a specific movie title in all library branches
+func (libClient Client) FindMovies(title string) []domain.Movie {
+	sessionErr := libClient.openSession()
+	if sessionErr != nil {
+		fmt.Println(sessionErr)
+		return nil
 	}
-	games := make([]domain.Game, 0)
-	doc.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
-		title := resultItem.Find(titleSelector).Text()
-		if isGameAvailable(resultItem.Parent()) {
-			games = append(games, domain.Game{Title: title})
-		}
-	})
-	return games, nil
+	searchRequest := createMovieSearchRequest(title, libClient.session)
+	httpClient := http.Client{}
+	searchResponse, err := httpClient.Do(searchRequest)
+	if err != nil {
+		log.Println("error during search")
+		return nil
+	}
+	resultTitles := parseMovieSearch(searchResponse.Body)
+
+	movies := make([]domain.Movie, 0)
+	for _, resultTitle := range resultTitles {
+		movies = append(movies, resultTitle.loadMovieCopies(libClient.session)...)
+	}
+	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
+	return movies
 }
 
-func isGameAvailable(searchHitNode *goquery.Selection) bool {
-	return len(searchHitNode.Find(availabilitySelector).Nodes) > 0
+// Load all existing copys of a result title over all library branches
+func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Movie {
+	request := createRequest(libSession, result.resultUrl)
+
+	httpClient := http.Client{}
+	movieResponse, err := httpClient.Do(request)
+	if err != nil {
+		log.Println("error during search")
+		return nil
+	}
+	return parseMovieCopiesPage(result.title, movieResponse.Body)
 }
 
 func parseMovieSearch(searchResponse io.Reader) []searchResult {
