@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseMovieCopiesResult(t *testing.T) {
-	testResponse := loadTestData("movie_copies_example.html")
+	testResponse := loadTestData("testdata/movie_copies_example.html")
 	movies := parseMovieCopiesPage("Terminator - Genesis", testResponse)
 	Equal(t, 6, len(movies))
 

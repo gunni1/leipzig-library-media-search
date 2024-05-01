@@ -8,7 +8,7 @@ import (
 )
 
 func TestAvailability(t *testing.T) {
-	fileReader := loadTestData("game_search_example.html")
+	fileReader := loadTestData("testdata/game_search_example.html")
 
 	games, _ := parseGameSearchResult(fileReader)
 
