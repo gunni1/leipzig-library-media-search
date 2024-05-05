@@ -20,20 +20,34 @@ func TestParseMovieCopiesResult(t *testing.T) {
 	Equal(t, 2, available)
 }
 
-func TestMovieSearchRequestHasCookiesSet(t *testing.T) {
-	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
-	request := createMovieSearchRequest("Terminator", session)
-	assertSessionCookiesExists(request, t)
+func TestParseSearchResultMovies(t *testing.T) {
+	testResponse := loadTestData("testdata/movie_search_result.html")
+	results := parseMediaSearch(testResponse)
+	Equal(t, 3, len(results))
+
+	Equal(t, "Der Clou", results[0].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=1&identifier=-1_FT_613132921", results[0].resultUrl)
+
+	Equal(t, "Der Clou", results[1].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=2&identifier=-1_FT_613132921", results[1].resultUrl)
+
+	Equal(t, "Der Clou [Blu-ray]", results[2].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=3&identifier=-1_FT_613132921", results[2].resultUrl)
+
 }
 
-func TestMovieSearchRequestHasQueryParamsSet(t *testing.T) {
-	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
-	request := createMovieSearchRequest("Terminator", session)
-	Equal(t, "submit", request.URL.Query().Get("methodToCall"))
-	Equal(t, "331", request.URL.Query().Get("searchCategories[0]"))
-	Equal(t, "500", request.URL.Query().Get("numberOfHits"))
-	Equal(t, "3", request.URL.Query().Get("searchRestrictionID[2]"))
-	Equal(t, "29", request.URL.Query().Get("searchRestrictionValue1[2]"))
-	Equal(t, "0", request.URL.Query().Get("selectedViewBranchlib"))
-	Empty(t, request.URL.Query().Get("selectedSearchBranchlib"))
+func TestParseSearchResultGames(t *testing.T) {
+	testResponse := loadTestData("testdata/game_search_result.html")
+	results := parseMediaSearch(testResponse)
+	Equal(t, 3, len(results))
+
+	Equal(t, "Monster hunter generations ultimate", results[0].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=1&identifier=-1_FT_256756711", results[0].resultUrl)
+
+	Equal(t, "Monster hunter rise", results[1].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=2&identifier=-1_FT_256756711", results[1].resultUrl)
+
+	Equal(t, "Monster Hunter - Stories 2. Wings of Ruin", results[2].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=3&identifier=-1_FT_256756711", results[2].resultUrl)
+
 }

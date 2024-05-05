@@ -20,16 +20,45 @@ func createRequest(libSession webOpacSession, path string) *http.Request {
 	return request
 }
 
-func createMovieSearchRequest(searchString string, libSession webOpacSession) *http.Request {
+func NewMovieSearchRequest(searchString string, libSession webOpacSession) *http.Request {
 	request := createRequest(libSession, "/webOPACClient/search.do")
 	request.URL.RawQuery = createMovieSearchQuery(*request, searchString, libSession.userSessionId)
 	return request
 }
 
-func createGameSearchRequest(branchCode int, platform string, libSession webOpacSession) *http.Request {
+func NewGameIndexRequest(branchCode int, platform string, libSession webOpacSession) *http.Request {
 	request := createRequest(libSession, "/webOPACClient/search.do")
 	request.URL.RawQuery = createGameIndexQuery(*request, platform, libSession.userSessionId, branchCode)
 	return request
+}
+
+func NewGameSearchRequest(title string, platform string, libSession webOpacSession) *http.Request {
+	request := createRequest(libSession, "/webOPACClient/search.do")
+	request.URL.RawQuery = createGameSearchQuery(*request, title, platform, libSession.userSessionId)
+	return request
+}
+
+func createGameSearchQuery(request http.Request, title string, platform string, userSessionId string) string {
+	query := request.URL.Query()
+	query.Add("methodToCall", "submit")
+	query.Add("methodToCallParameter", "submitSearch")
+	query.Add("submitSearch", "Suchen")
+	query.Add("callingPage", "searchPreferences")
+	query.Add("numberOfHits", "500")
+	query.Add("timeOut", "20")
+	query.Add("CSId", userSessionId)
+	//Search for Stadtbibliothek, collect actual branch information un further requests
+	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(0), 10))
+	//Search for category title
+	query.Add("searchString[0]", title)
+	query.Add("searchCategories[0]", "331")
+	//Search for category schlagwort
+	query.Add("searchString[1]", platform)
+	query.Add("searchCategories[1]", "902")
+	//Restrict search to games
+	query.Add("searchRestrictionID[2]", "3")
+	query.Add("searchRestrictionValue1[2]", "27")
+	return query.Encode()
 }
 
 func createMovieSearchQuery(request http.Request, searchString string, userSessionId string) string {
@@ -63,7 +92,7 @@ func createGameIndexQuery(request http.Request, platform string, userSessionId s
 	query.Add("CSId", userSessionId)
 	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
 	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	//Search the platform as a catchword
+	//Search the platform as a keyword (schlagwort)
 	query.Add("searchString[0]", platform)
 	query.Add("searchCategories[0]", "902")
 

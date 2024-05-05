@@ -19,7 +19,7 @@ const (
 func TestGameRequestHasSearchParameters(t *testing.T) {
 	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
 	searchString := "Nintendo Switch"
-	result := createGameSearchRequest(40, searchString, session)
+	result := NewGameIndexRequest(40, searchString, session)
 
 	Equal(t, "submit", result.URL.Query().Get("methodToCall"))
 	Equal(t, "submitSearch", result.URL.Query().Get("methodToCallParameter"))
@@ -36,7 +36,7 @@ func TestGameRequestHasSearchParameters(t *testing.T) {
 
 func TestGameRequestHasCookiesSet(t *testing.T) {
 	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
-	request := createGameSearchRequest(40, "Nintendo Switch", session)
+	request := NewGameIndexRequest(40, "Nintendo Switch", session)
 	assertSessionCookiesExists(request, t)
 }
 

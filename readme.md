@@ -30,7 +30,7 @@ Weitere Parameter:
 |Parameter                  | Beschreibung                          | Beispiel              |
 |-                          |-                                      | -                     |
 |CSId                       | USERSESSIONID                         | 1991N87S0583b9ce8380deec85603fd2da7803777dc9d087 |
-|searchCategory             | Eigenschaft, nach der Gesucht wird.   | 331                   |
+|searchCategories           | Eigenschaft, nach der Gesucht wird.   | 331                   |
 |searchString               | Schlüsselwort für die Suche           | Nintendo+Switch       |
 |selectedViewBranchlib      | Bibliothekszweigstelle für Suche      | 41                    |
 |selectedSearchBranchlib    | Bibliothekszweigstelle für Abholung   | 41                    |
@@ -42,13 +42,24 @@ Volständiges Beispiel:
 ```https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do?methodToCall=submit&methodToCallParameter=submitSearch&searchCategories%5B0%5D=902&submitSearch=Suchen&callingPage=searchPreferences&CSId=1991N87S0583b9ce8380deec85603fd2da7803777dc9d087&searchString%5B0%5D=Nintendo+Switch&numberOfHits=500&timeOut=20&selectedViewBranchlib=41&selectedSearchBranchlib=41```
 
 ### Kodierung der Suchkategorien 
-Eigenschaften der Medien (z.B. Titel) werden über den Parameter `searchCategory` angegeben und als ganzzahlige Werte kodiert. Nachfolgend eine Auflistung der relevanten Codes:
+Eigenschaften der Medien (z.B. Titel) werden über das Parameter-Array `searchCategories[]` angegeben und als ganzzahlige Werte kodiert. Die konkreten Suchbegriffe je Kategorie werden über das Parameter-Array `searchString[]` angegeben und über den Index zugeordnet. Nachfolgend eine Auflistung der relevanten Codes:
 
-|Code   |Eigenschaft des Mediums|Beispiel       |
-|-      |-                      |-              |
-|331    |Titel                  |Matrix         |
-|800    |Medienart              |bluray         |
-|902    |Schlagwort             |switch         |
+|Code   |Eigenschaft des Mediums|Beispiel                                                   |
+|-      |-                      |-                                                          |
+|331    |Titel                  |`searchCategories[0]=331&searchString[0]=matrix`           |
+|800    |Medienart              |`searchCategories[1]=800&searchString[1]=dvd`              |
+|902    |Schlagwort             |`searchCategories[2]=902&searchString[2]=Nintendo+Switch`  |
+
+### Kodierung der Medienart
+Suchergebnisse werden mit dem Parametern `searchRestrictionID[]` und `searchRestrictionValue1[]` eingeschränkt. Der Index des Arrays bestimmt dabei den Filter. Die Medienart wird mit dem Index `2`, also `searchRestrictionValue1[2]` bestimmt. IndexNachfolgend eine Auflistung der relevanten Codes:
+
+|Code   | Medienart                         |
+|-      |-                                  |
+|27     | Software, Computer-/ Videospiel   | 
+|28     | Buch                              | 
+|29     | DVD / Bluray                      |
+|30     | CD / Hörbuch                      |
+|36     | Brett- / Gesellschaftsspiel       |
 
 ### Kodierung der Stadtteilbibliotheken
 

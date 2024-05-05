@@ -27,14 +27,14 @@ func (libClient Client) FindMovies(title string) []domain.Movie {
 		fmt.Println(sessionErr)
 		return nil
 	}
-	searchRequest := createMovieSearchRequest(title, libClient.session)
+	searchRequest := NewMovieSearchRequest(title, libClient.session)
 	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(searchRequest)
 	if err != nil {
 		log.Println("error during search")
 		return nil
 	}
-	resultTitles := parseMovieSearch(searchResponse.Body)
+	resultTitles := parseMediaSearch(searchResponse.Body)
 
 	movies := make([]domain.Movie, 0)
 	for _, resultTitle := range resultTitles {
@@ -57,7 +57,7 @@ func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.M
 	return parseMovieCopiesPage(result.title, movieResponse.Body)
 }
 
-func parseMovieSearch(searchResponse io.Reader) []searchResult {
+func parseMediaSearch(searchResponse io.Reader) []searchResult {
 	doc, docErr := goquery.NewDocumentFromReader(searchResponse)
 	if docErr != nil {
 		log.Println("Could not create document from response.")
