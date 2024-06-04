@@ -26,9 +26,9 @@ func InitMux() *http.ServeMux {
 	return mux
 }
 
-type MoviesByBranch struct {
+type MediaByBranch struct {
 	Branch string
-	Movies []domain.Movie
+	Media  []domain.Media
 }
 
 func gamesIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -55,37 +55,37 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 	byBranch := arrangeByBranch(availableMovies)
 
-	data := map[string][]MoviesByBranch{
+	data := map[string][]MediaByBranch{
 		"Branches": byBranch,
 	}
 	templ := template.Must(template.ParseFS(htmlTemplates, "templates/item-list-by-branch.html"))
 	templ.Execute(respWriter, data)
 }
 
-func filterAvailable(movies []domain.Movie) []domain.Movie {
-	available := make([]domain.Movie, 0)
-	for _, movie := range movies {
-		if movie.IsAvailable {
-			available = append(available, movie)
+func filterAvailable(medias []domain.Media) []domain.Media {
+	available := make([]domain.Media, 0)
+	for _, media := range medias {
+		if media.IsAvailable {
+			available = append(available, media)
 		}
 	}
 	return available
 }
 
-func arrangeByBranch(movies []domain.Movie) []MoviesByBranch {
-	result := make([]MoviesByBranch, 0)
+func arrangeByBranch(medias []domain.Media) []MediaByBranch {
+	result := make([]MediaByBranch, 0)
 
-	byBranch := make(map[string][]domain.Movie)
-	for _, movie := range movies {
-		if otherMovies, branchExists := byBranch[movie.Branch]; branchExists {
-			byBranch[movie.Branch] = append(otherMovies, movie)
+	byBranch := make(map[string][]domain.Media)
+	for _, media := range medias {
+		if otherMedias, branchExists := byBranch[media.Branch]; branchExists {
+			byBranch[media.Branch] = append(otherMedias, media)
 		} else {
-			byBranch[movie.Branch] = []domain.Movie{movie}
+			byBranch[media.Branch] = []domain.Media{media}
 		}
 	}
 
-	for branch, mvs := range byBranch {
-		result = append(result, MoviesByBranch{Branch: branch, Movies: mvs})
+	for branch, mds := range byBranch {
+		result = append(result, MediaByBranch{Branch: branch, Media: mds})
 	}
 	return result
 }

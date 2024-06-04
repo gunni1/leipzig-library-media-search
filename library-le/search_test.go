@@ -3,12 +3,30 @@ package libraryle
 import (
 	"testing"
 
+	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 	. "github.com/stretchr/testify/assert"
 )
 
+func TestParseGameCopiesResult(t *testing.T) {
+	testResponse := loadTestData("testdata/game_copies_example.html")
+	games := parseMediaCopiesPage("Monster Hunter Rise", testResponse)
+	Equal(t, 4, len(games))
+
+	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
+	mediaEqualTo(t, games[1], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
+	mediaEqualTo(t, games[2], "Monster Hunter Rise", "Bibliothek Südvorstadt / Erwachsenenbibliothek - EG", true)
+	mediaEqualTo(t, games[3], "Monster Hunter Rise", "Bibliothek Gohlis / Kinderbibliothek", false)
+}
+
+func mediaEqualTo(t *testing.T, media domain.Media, exptTitle string, exptBranch string, exptAvalia bool) {
+	Equal(t, exptTitle, media.Title)
+	Equal(t, exptBranch, media.Branch)
+	Equal(t, exptAvalia, media.IsAvailable)
+}
+
 func TestParseMovieCopiesResult(t *testing.T) {
 	testResponse := loadTestData("testdata/movie_copies_example.html")
-	movies := parseMovieCopiesPage("Terminator - Genesis", testResponse)
+	movies := parseMediaCopiesPage("Terminator - Genesis", testResponse)
 	Equal(t, 6, len(movies))
 
 	available := 0

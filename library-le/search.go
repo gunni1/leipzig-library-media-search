@@ -21,7 +21,7 @@ type searchResult struct {
 }
 
 // Search for a specific movie title in all library branches
-func (libClient Client) FindMovies(title string) []domain.Movie {
+func (libClient Client) FindMovies(title string) []domain.Media {
 	sessionErr := libClient.openSession()
 	if sessionErr != nil {
 		fmt.Println(sessionErr)
@@ -36,7 +36,7 @@ func (libClient Client) FindMovies(title string) []domain.Movie {
 	}
 	resultTitles := parseMediaSearch(searchResponse.Body)
 
-	movies := make([]domain.Movie, 0)
+	movies := make([]domain.Media, 0)
 	for _, resultTitle := range resultTitles {
 		movies = append(movies, resultTitle.loadMovieCopies(libClient.session)...)
 	}
@@ -45,7 +45,7 @@ func (libClient Client) FindMovies(title string) []domain.Movie {
 }
 
 // Load all existing copys of a result title over all library branches
-func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Movie {
+func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Media {
 	request := createRequest(libSession, result.resultUrl)
 
 	httpClient := http.Client{}
@@ -54,7 +54,7 @@ func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.M
 		log.Println("error during search")
 		return nil
 	}
-	return parseMovieCopiesPage(result.title, movieResponse.Body)
+	return parseMediaCopiesPage(result.title, movieResponse.Body)
 }
 
 func parseMediaSearch(searchResponse io.Reader) []searchResult {
@@ -72,18 +72,18 @@ func parseMediaSearch(searchResponse io.Reader) []searchResult {
 	return titles
 }
 
-func parseMovieCopiesPage(title string, page io.Reader) []domain.Movie {
+func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 	doc, docErr := goquery.NewDocumentFromReader(page)
 	if docErr != nil {
 		log.Println("Could not create document from response.")
 		return nil
 	}
-	movies := make([]domain.Movie, 0)
+	movies := make([]domain.Media, 0)
 
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
 		status := isMovieAvailable(copy)
-		movies = append(movies, domain.Movie{Title: title, Branch: branch, IsAvailable: status})
+		movies = append(movies, domain.Media{Title: title, Branch: branch, IsAvailable: status})
 	})
 
 	return movies
