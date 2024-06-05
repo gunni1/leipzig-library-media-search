@@ -3,12 +3,30 @@ package libraryle
 import (
 	"testing"
 
+	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 	. "github.com/stretchr/testify/assert"
 )
 
+func TestParseGameCopiesResult(t *testing.T) {
+	testResponse := loadTestData("testdata/game_copies_example.html")
+	games := parseMediaCopiesPage("Monster Hunter Rise", testResponse)
+	Equal(t, 4, len(games))
+
+	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
+	mediaEqualTo(t, games[1], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
+	mediaEqualTo(t, games[2], "Monster Hunter Rise", "Bibliothek Südvorstadt / Erwachsenenbibliothek - EG", true)
+	mediaEqualTo(t, games[3], "Monster Hunter Rise", "Bibliothek Gohlis / Kinderbibliothek", false)
+}
+
+func mediaEqualTo(t *testing.T, media domain.Media, exptTitle string, exptBranch string, exptAvalia bool) {
+	Equal(t, exptTitle, media.Title)
+	Equal(t, exptBranch, media.Branch)
+	Equal(t, exptAvalia, media.IsAvailable)
+}
+
 func TestParseMovieCopiesResult(t *testing.T) {
 	testResponse := loadTestData("testdata/movie_copies_example.html")
-	movies := parseMovieCopiesPage("Terminator - Genesis", testResponse)
+	movies := parseMediaCopiesPage("Terminator - Genesis", testResponse)
 	Equal(t, 6, len(movies))
 
 	available := 0
@@ -20,20 +38,34 @@ func TestParseMovieCopiesResult(t *testing.T) {
 	Equal(t, 2, available)
 }
 
-func TestMovieSearchRequestHasCookiesSet(t *testing.T) {
-	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
-	request := createMovieSearchRequest("Terminator", session)
-	assertSessionCookiesExists(request, t)
+func TestParseSearchResultMovies(t *testing.T) {
+	testResponse := loadTestData("testdata/movie_search_result.html")
+	results := parseMediaSearch(testResponse)
+	Equal(t, 3, len(results))
+
+	Equal(t, "Der Clou", results[0].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=1&identifier=-1_FT_613132921", results[0].resultUrl)
+
+	Equal(t, "Der Clou", results[1].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=2&identifier=-1_FT_613132921", results[1].resultUrl)
+
+	Equal(t, "Der Clou [Blu-ray]", results[2].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=3&identifier=-1_FT_613132921", results[2].resultUrl)
+
 }
 
-func TestMovieSearchRequestHasQueryParamsSet(t *testing.T) {
-	session := webOpacSession{jSessionId: jSessionId, userSessionId: userSessionId}
-	request := createMovieSearchRequest("Terminator", session)
-	Equal(t, "submit", request.URL.Query().Get("methodToCall"))
-	Equal(t, "331", request.URL.Query().Get("searchCategories[0]"))
-	Equal(t, "500", request.URL.Query().Get("numberOfHits"))
-	Equal(t, "3", request.URL.Query().Get("searchRestrictionID[2]"))
-	Equal(t, "29", request.URL.Query().Get("searchRestrictionValue1[2]"))
-	Equal(t, "0", request.URL.Query().Get("selectedViewBranchlib"))
-	Empty(t, request.URL.Query().Get("selectedSearchBranchlib"))
+func TestParseSearchResultGames(t *testing.T) {
+	testResponse := loadTestData("testdata/game_search_result.html")
+	results := parseMediaSearch(testResponse)
+	Equal(t, 3, len(results))
+
+	Equal(t, "Monster hunter generations ultimate", results[0].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=1&identifier=-1_FT_256756711", results[0].resultUrl)
+
+	Equal(t, "Monster hunter rise", results[1].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=2&identifier=-1_FT_256756711", results[1].resultUrl)
+
+	Equal(t, "Monster Hunter - Stories 2. Wings of Ruin", results[2].title)
+	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=3&identifier=-1_FT_256756711", results[2].resultUrl)
+
 }

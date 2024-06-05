@@ -22,7 +22,7 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 		fmt.Println(sessionErr)
 		return nil
 	}
-	request := createGameSearchRequest(branchCode, platform, libClient.session)
+	request := NewGameIndexRequest(branchCode, platform, libClient.session)
 	httpClient := http.Client{}
 	response, err := httpClient.Do(request)
 	if err != nil {
