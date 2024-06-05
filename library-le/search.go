@@ -38,23 +38,23 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 
 	movies := make([]domain.Media, 0)
 	for _, resultTitle := range resultTitles {
-		movies = append(movies, resultTitle.loadMovieCopies(libClient.session)...)
+		movies = append(movies, resultTitle.loadMediaCopies(libClient.session)...)
 	}
 	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
 	return movies
 }
 
 // Load all existing copys of a result title over all library branches
-func (result searchResult) loadMovieCopies(libSession webOpacSession) []domain.Media {
+func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.Media {
 	request := createRequest(libSession, result.resultUrl)
 
 	httpClient := http.Client{}
-	movieResponse, err := httpClient.Do(request)
+	mediaResponse, err := httpClient.Do(request)
 	if err != nil {
 		log.Println("error during search")
 		return nil
 	}
-	return parseMediaCopiesPage(result.title, movieResponse.Body)
+	return parseMediaCopiesPage(result.title, mediaResponse.Body)
 }
 
 func parseMediaSearch(searchResponse io.Reader) []searchResult {

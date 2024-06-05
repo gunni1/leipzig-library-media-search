@@ -19,9 +19,9 @@ var htmlTemplates embed.FS
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/games/", gamesIndexHandler)
-	mux.HandleFunc("/movies/", movieHandler)
-	mux.HandleFunc("/games-search/", gameSearchHandler)
+	mux.HandleFunc("/games/", gamesIndexPageHandler)
+	mux.HandleFunc("/movies/", moviePageHandler)
+	mux.HandleFunc("/games-search/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	return mux
 }
@@ -31,14 +31,18 @@ type MediaByBranch struct {
 	Media  []domain.Media
 }
 
-func gamesIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
+func gamesIndexPageHandler(respWriter http.ResponseWriter, request *http.Request) {
 	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games.html"))
 	templ.Execute(respWriter, nil)
 }
 
-func movieHandler(respWriter http.ResponseWriter, request *http.Request) {
+func moviePageHandler(respWriter http.ResponseWriter, request *http.Request) {
 	template := template.Must(template.ParseFS(htmlTemplates, "templates/movies.html"))
 	template.Execute(respWriter, nil)
+}
+
+func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
+
 }
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -52,9 +56,7 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	availableMovies := filterAvailable(movies)
-
 	byBranch := arrangeByBranch(availableMovies)
-
 	data := map[string][]MediaByBranch{
 		"Branches": byBranch,
 	}
@@ -90,7 +92,7 @@ func arrangeByBranch(medias []domain.Media) []MediaByBranch {
 	return result
 }
 
-func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
+func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	branch := strings.ToLower(request.PostFormValue("branch"))
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	branchCode, exists := libClient.GetBranchCode(branch)
