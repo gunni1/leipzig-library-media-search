@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -37,10 +38,10 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 	resultTitles := parseMediaSearch(searchResponse.Body)
 
 	movies := make([]domain.Media, 0)
+	//TODO: Parallel Ergbnislinks folgen und Details sammeln
 	for _, resultTitle := range resultTitles {
 		movies = append(movies, resultTitle.loadMediaCopies(libClient.session)...)
 	}
-	//Parallel Ergebnislinks folgen und Details über Zweigstelle und Verfpgbarkeit sammeln
 	return movies
 }
 
@@ -57,6 +58,8 @@ func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.M
 	return parseMediaCopiesPage(result.title, mediaResponse.Body)
 }
 
+// Go through the search overview page and create a result object for each title found.
+// The result contain details of each copie availabile of the media.
 func parseMediaSearch(searchResponse io.Reader) []searchResult {
 	doc, docErr := goquery.NewDocumentFromReader(searchResponse)
 	if docErr != nil {
@@ -65,13 +68,15 @@ func parseMediaSearch(searchResponse io.Reader) []searchResult {
 	}
 	titles := make([]searchResult, 0)
 	doc.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
-		title := resultItem.Find(titleSelector).Text()
+		title := clearTitle(resultItem.Find(titleSelector).Text())
 		resultUrl, _ := resultItem.Find(titleSelector).Attr("href")
 		titles = append(titles, searchResult{title: title, resultUrl: resultUrl})
 	})
 	return titles
 }
 
+// the media copies page is a list of library branches which have the specific copy of a title
+// it have information about the availability of the media
 func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 	doc, docErr := goquery.NewDocumentFromReader(page)
 	if docErr != nil {
@@ -82,14 +87,20 @@ func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
-		status := isMovieAvailable(copy)
+		status := isMediaAvailable(copy)
 		movies = append(movies, domain.Media{Title: title, Branch: branch, IsAvailable: status})
 	})
 
 	return movies
 }
 
-func isMovieAvailable(copy *goquery.Selection) bool {
+// Remove additional media information from titles in square brackets
+func clearTitle(title string) string {
+	brackets := regexp.MustCompile(`\[.*\]`)
+	return strings.TrimSpace(brackets.ReplaceAllString(title, ""))
+}
+
+func isMediaAvailable(copy *goquery.Selection) bool {
 	rentalStateLink := copy.Find("div:nth-child(5) > div > a")
 	//Link indicates a rented state (can reserve a copy)
 	if rentalStateLink.Length() != 0 {

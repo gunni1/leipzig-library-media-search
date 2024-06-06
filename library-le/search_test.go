@@ -49,7 +49,7 @@ func TestParseSearchResultMovies(t *testing.T) {
 	Equal(t, "Der Clou", results[1].title)
 	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=2&identifier=-1_FT_613132921", results[1].resultUrl)
 
-	Equal(t, "Der Clou [Blu-ray]", results[2].title)
+	Equal(t, "Der Clou", results[2].title)
 	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=3&identifier=-1_FT_613132921", results[2].resultUrl)
 
 }
@@ -67,5 +67,9 @@ func TestParseSearchResultGames(t *testing.T) {
 
 	Equal(t, "Monster Hunter - Stories 2. Wings of Ruin", results[2].title)
 	Equal(t, "/webOPACClient/singleHit.do?methodToCall=showHit&curPos=3&identifier=-1_FT_256756711", results[2].resultUrl)
+}
 
+func TestClearTitle(t *testing.T) {
+	Equal(t, "Terminator", clearTitle("Terminator [Bildtonträger]"))
+	Equal(t, "Mad Max - Fury Road", clearTitle("Mad Max - Fury Road [blu-ray]"))
 }
