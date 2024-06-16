@@ -32,10 +32,10 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(searchRequest)
 	if err != nil {
-		log.Println("error during search")
+		log.Println(err)
 		return nil
 	}
-	resultTitles := parseMediaSearch(searchResponse.Body)
+	resultTitles := extractTitles(searchResponse.Body)
 
 	movies := make([]domain.Media, 0)
 	//TODO: Parallel Ergbnislinks folgen und Details sammeln
@@ -43,6 +43,28 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 		movies = append(movies, resultTitle.loadMediaCopies(libClient.session)...)
 	}
 	return movies
+}
+
+// Search for a specific game title in all library branches
+func (libClient Client) FindGames(title string, platform string) []domain.Media {
+	sessionErr := libClient.openSession()
+	if sessionErr != nil {
+		fmt.Println(sessionErr)
+		return nil
+	}
+	searchRequest := NewGameSearchRequest(title, platform, libClient.session)
+	httpClient := http.Client{}
+	searchResponse, err := httpClient.Do(searchRequest)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	resultTitles := extractTitles(searchResponse.Body)
+	games := make([]domain.Media, 0)
+	for _, resultTitle := range resultTitles {
+		games = append(games, resultTitle.loadMediaCopies(libClient.session)...)
+	}
+	return games
 }
 
 // Load all existing copys of a result title over all library branches
@@ -60,7 +82,7 @@ func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.M
 
 // Go through the search overview page and create a result object for each title found.
 // The result contain details of each copie availabile of the media.
-func parseMediaSearch(searchResponse io.Reader) []searchResult {
+func extractTitles(searchResponse io.Reader) []searchResult {
 	doc, docErr := goquery.NewDocumentFromReader(searchResponse)
 	if docErr != nil {
 		log.Println("Could not create document from response.")

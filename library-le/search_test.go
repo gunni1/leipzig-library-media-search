@@ -40,7 +40,7 @@ func TestParseMovieCopiesResult(t *testing.T) {
 
 func TestParseSearchResultMovies(t *testing.T) {
 	testResponse := loadTestData("testdata/movie_search_result.html")
-	results := parseMediaSearch(testResponse)
+	results := extractTitles(testResponse)
 	Equal(t, 3, len(results))
 
 	Equal(t, "Der Clou", results[0].title)
@@ -56,7 +56,7 @@ func TestParseSearchResultMovies(t *testing.T) {
 
 func TestParseSearchResultGames(t *testing.T) {
 	testResponse := loadTestData("testdata/game_search_result.html")
-	results := parseMediaSearch(testResponse)
+	results := extractTitles(testResponse)
 	Equal(t, 3, len(results))
 
 	Equal(t, "Monster hunter generations ultimate", results[0].title)

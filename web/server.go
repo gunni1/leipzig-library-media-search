@@ -21,7 +21,7 @@ func InitMux() *http.ServeMux {
 
 	mux.HandleFunc("/games/", gamesIndexPageHandler)
 	mux.HandleFunc("/movies/", moviePageHandler)
-	mux.HandleFunc("/games-search/", gameIndexHandler)
+	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	return mux
 }
@@ -32,7 +32,7 @@ type MediaByBranch struct {
 }
 
 func gamesIndexPageHandler(respWriter http.ResponseWriter, request *http.Request) {
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games.html"))
+	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games-index.html"))
 	templ.Execute(respWriter, nil)
 }
 
@@ -49,13 +49,16 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	title := strings.ToLower(request.PostFormValue("movie-title"))
 	client := libClient.Client{}
 	movies := client.FindMovies(title)
+	renderMediaResults(movies, respWriter)
+}
 
-	if len(movies) == 0 {
+func renderMediaResults(media []domain.Media, respWriter http.ResponseWriter) {
+	if len(media) == 0 {
 		fmt.Fprint(respWriter, "<p>Es wurden keine Titel gefunden.</p>")
 		return
 	}
 
-	availableMovies := filterAvailable(movies)
+	availableMovies := filterAvailable(media)
 	byBranch := arrangeByBranch(availableMovies)
 	data := map[string][]MediaByBranch{
 		"Branches": byBranch,
