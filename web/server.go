@@ -19,8 +19,7 @@ var htmlTemplates embed.FS
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/games/", gamesIndexPageHandler)
-	mux.HandleFunc("/movies/", moviePageHandler)
+	mux.Handle("/", http.FileServer(http.Dir("web/static")))
 	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	return mux
@@ -29,16 +28,6 @@ func InitMux() *http.ServeMux {
 type MediaByBranch struct {
 	Branch string
 	Media  []domain.Media
-}
-
-func gamesIndexPageHandler(respWriter http.ResponseWriter, request *http.Request) {
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/games-index.html"))
-	templ.Execute(respWriter, nil)
-}
-
-func moviePageHandler(respWriter http.ResponseWriter, request *http.Request) {
-	template := template.Must(template.ParseFS(htmlTemplates, "templates/movies.html"))
-	template.Execute(respWriter, nil)
 }
 
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
