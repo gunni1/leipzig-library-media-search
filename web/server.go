@@ -22,6 +22,7 @@ func InitMux() *http.ServeMux {
 	mux.Handle("/", http.FileServer(http.Dir("web/static")))
 	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
+	mux.HandleFunc("/games-search/", gameSearchHandler)
 	return mux
 }
 
@@ -31,7 +32,11 @@ type MediaByBranch struct {
 }
 
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
-
+	title := strings.ToLower(request.PostFormValue("title"))
+	platform := strings.ToLower(request.PostFormValue("platform"))
+	client := libClient.Client{}
+	games := client.FindGames(title, platform)
+	renderMediaResults(games, respWriter)
 }
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
