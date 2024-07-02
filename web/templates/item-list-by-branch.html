@@ -9,7 +9,7 @@
         <div class="accordion-body">
             <ul class="list-group list-group-flush">
             {{ range .Media}}
-                <li class="list-group-item">{{ .Title }}</li>
+                <li class="list-group-item {{ if not .IsAvailable }}list-group-item-dark{{ end }}">{{ .Title }}</li>
             {{ end }}
             </ul>
         </div>

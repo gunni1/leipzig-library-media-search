@@ -41,8 +41,13 @@ func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	title := strings.ToLower(request.PostFormValue("movie-title"))
+	showNotAvailable := strings.ToLower(request.PostFormValue("showNotAvailable")) == "true"
+
 	client := libClient.Client{}
 	movies := client.FindMovies(title)
+	if !showNotAvailable {
+		movies = filterAvailable(movies)
+	}
 	renderMediaResults(movies, respWriter)
 }
 
@@ -51,9 +56,7 @@ func renderMediaResults(media []domain.Media, respWriter http.ResponseWriter) {
 		fmt.Fprint(respWriter, "<p>Es wurden keine Titel gefunden.</p>")
 		return
 	}
-
-	availableMovies := filterAvailable(media)
-	byBranch := arrangeByBranch(availableMovies)
+	byBranch := arrangeByBranch(media)
 	data := map[string][]MediaByBranch{
 		"Branches": byBranch,
 	}
