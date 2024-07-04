@@ -34,8 +34,13 @@ type MediaByBranch struct {
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	title := strings.ToLower(request.PostFormValue("title"))
 	platform := strings.ToLower(request.PostFormValue("platform"))
+	showNotAvailable := strings.ToLower(request.PostFormValue("showNotAvailable")) == "true"
+
 	client := libClient.Client{}
 	games := client.FindGames(title, platform)
+	if !showNotAvailable {
+		games = filterAvailable(games)
+	}
 	renderMediaResults(games, respWriter)
 }
 

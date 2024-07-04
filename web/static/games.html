@@ -10,7 +10,6 @@
                 <div class="p-2">
                     <input type="text" class="form-control" id="title" name="title" placeholder="Titel des Spiels">
                 </div>
-                <!-- TODO: insert option für platform-->
                 <div class="p-2">
                     <select id="platformSelect" name="platform" class="form-select" style="width:auto;">
                         <option>Switch</option>
@@ -20,6 +19,12 @@
                 </div>
                 <div class="p-2">
                     <button type="submit" class="btn btn-primary">Los</button>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input form-control mx-1" id="showNotAvailable" name="showNotAvailable" type="checkbox" value="true">
+                    <label class="form-check-label" for="showNotAvailable">
+                      Nicht ausleihbare anzeigen 
+                    </label>
                 </div>
             </form>
             <div class="d-flex justify-content-center htmx-indicator" id="spinner">
