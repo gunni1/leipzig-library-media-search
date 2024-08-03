@@ -12,10 +12,10 @@ func TestParseGameCopiesResult(t *testing.T) {
 	games := parseMediaCopiesPage("Monster Hunter Rise", testResponse)
 	Equal(t, 4, len(games))
 
-	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
-	mediaEqualTo(t, games[1], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
-	mediaEqualTo(t, games[2], "Monster Hunter Rise", "Bibliothek Südvorstadt / Erwachsenenbibliothek - EG", true)
-	mediaEqualTo(t, games[3], "Monster Hunter Rise", "Bibliothek Gohlis / Kinderbibliothek", false)
+	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek", false)
+	mediaEqualTo(t, games[1], "Monster Hunter Rise", "Stadtbibliothek", false)
+	mediaEqualTo(t, games[2], "Monster Hunter Rise", "Bibliothek Südvorstadt", true)
+	mediaEqualTo(t, games[3], "Monster Hunter Rise", "Bibliothek Gohlis", false)
 }
 
 func mediaEqualTo(t *testing.T, media domain.Media, exptTitle string, exptBranch string, exptAvalia bool) {
@@ -72,4 +72,11 @@ func TestParseSearchResultGames(t *testing.T) {
 func TestClearTitle(t *testing.T) {
 	Equal(t, "Terminator", clearTitle("Terminator [Bildtonträger]"))
 	Equal(t, "Mad Max - Fury Road", clearTitle("Mad Max - Fury Road [blu-ray]"))
+}
+
+func TestRemoveBranchSuffix(t *testing.T) {
+	Equal(t, "Bibliothek Gohlis", removeBranchSuffix("Bibliothek Gohlis / Erwachsenenbibliothek"))
+	Equal(t, "Bibliothek Grünau-Nord", removeBranchSuffix("Bibliothek Grünau-Nord / Erwachsenenbibliothek"))
+	Equal(t, "Fahrbibliothek", removeBranchSuffix("Fahrbibliothek"))
+	Equal(t, "", removeBranchSuffix(""))
 }

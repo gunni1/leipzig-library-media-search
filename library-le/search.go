@@ -110,10 +110,14 @@ func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
 		status := isMediaAvailable(copy)
-		movies = append(movies, domain.Media{Title: title, Branch: branch, IsAvailable: status})
+		movies = append(movies, domain.Media{Title: title, Branch: removeBranchSuffix(branch), IsAvailable: status})
 	})
-
 	return movies
+}
+
+// Remove location detail suffix from branch name
+func removeBranchSuffix(branchName string) string {
+	return strings.TrimSpace(strings.Split(branchName, "/")[0])
 }
 
 // Remove additional media information from titles in square brackets

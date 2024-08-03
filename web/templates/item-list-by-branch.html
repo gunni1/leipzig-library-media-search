@@ -1,4 +1,4 @@
-{{ range $i, $e :=  .Branches }}
+{{ range .Branches }}
 <div class="accordion-item">
     <h2 class="accordion-header">
         <span class="accordion-button">
@@ -8,8 +8,15 @@
     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#display-movies">
         <div class="accordion-body">
             <ul class="list-group list-group-flush">
-            {{ range .Media}}
-                <li class="list-group-item {{ if not .IsAvailable }}list-group-item-dark{{ end }}">{{ .Title }}</li>
+            {{ range .Media }}
+                <li class="list-group-item d-flex justify-content-between align-items-center {{ if not .IsAvailable }}list-group-item-dark{{ end }}">
+                    {{ .Title }}
+                    {{ if not .IsAvailable }}
+                        <button hx-get="/return-date/{{urlquery .Branch }}/{{ $.MediaType }}/{{urlquery .Title }}" 
+                            hx-trigger="click"
+                            class="badge bg-primary rounded-pill">lade Rückgabe</button>
+                    {{ end }}
+                </li>
             {{ end }}
             </ul>
         </div>
