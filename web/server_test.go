@@ -24,3 +24,9 @@ func TestArrangeByBranch(t *testing.T) {
 	Equal(t, 2, len(result))
 	ElementsMatch(t, result, expected)
 }
+
+func TestEncodeBranchName(t *testing.T) {
+	Equal(t, 20, encodeBranch("Bibliothek Plagwitz"))
+	Equal(t, 0, encodeBranch("Stadtbibliothek"))
+	Equal(t, 41, encodeBranch("Bibliothek Gohlis"))
+}

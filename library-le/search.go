@@ -67,6 +67,16 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 	return games
 }
 
+func (libClient Client) RetrieveReturnDate(mediaType string, branchCode int, title string) (string, error) {
+	var request *http.Request
+	if mediaType == domain.MOVIE {
+
+	} else if mediaType == domain.GAME {
+
+	}
+	return "", nil
+}
+
 // Load all existing copys of a result title over all library branches
 func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.Media {
 	request := createRequest(libSession, result.resultUrl)

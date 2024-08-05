@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -55,7 +56,7 @@ func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if !showNotAvailable {
 		games = filterAvailable(games)
 	}
-	renderMediaResults(games, GAME, respWriter)
+	renderMediaResults(games, domain.GAME, respWriter)
 }
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -67,7 +68,18 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if !showNotAvailable {
 		movies = filterAvailable(movies)
 	}
-	renderMediaResults(movies, MOVIE, respWriter)
+	renderMediaResults(movies, domain.MOVIE, respWriter)
+}
+
+func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
+	branchCode, _ := strrequest.PathValue("branchCode"))
+	mediaType := request.PathValue("mediaType")
+	title := request.PathValue("title")
+	log.Printf("%s - %s - %s", branchCode, mediaType, title)
+	client := libClient.Client{}
+	returnDate, _ := client.RetrieveReturnDate(mediaType, branchCode, title)
+	//TODO error handling
+	fmt.Fprintf(respWriter, returnDate)
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter) {
@@ -83,8 +95,22 @@ func renderMediaResults(media []domain.Media, mediaType string, respWriter http.
 		Branches:  byBranch,
 		MediaType: mediaType,
 	}
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/item-list-by-branch.html"))
+	templ, _ := template.New("item-list-by-branch.html").Funcs(template.FuncMap{
+		"encodeBranch": encodeBranch,
+	}).ParseFS(htmlTemplates, "templates/item-list-by-branch.html")
 	templ.Execute(respWriter, data)
+}
+
+func encodeBranch(branchName string) int {
+	tokens := strings.Split(branchName, " ")
+	var branch string
+	if len(tokens) > 1 {
+		branch = tokens[1]
+	} else {
+		branch = tokens[0]
+	}
+	code, _ := libClient.GetBranchCode(branch)
+	return code
 }
 
 func filterAvailable(medias []domain.Media) []domain.Media {
@@ -108,7 +134,6 @@ func arrangeByBranch(medias []domain.Media) []MediaByBranch {
 			byBranch[media.Branch] = []domain.Media{media}
 		}
 	}
-	//TODO: Branchcode anhand des branches ermitteln und mit rein packen
 	for branch, mds := range byBranch {
 		result = append(result, MediaByBranch{Branch: branch, Media: mds})
 	}
@@ -130,20 +155,9 @@ func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 		fmt.Fprint(respWriter, "<p>Es wurden keine ausleihbaren Titel gefunden.</p>")
 		return
 	}
-
 	data := map[string][]domain.Game{
 		"Items": games,
 	}
 	templ := template.Must(template.ParseFS(htmlTemplates, "templates/item-list.html"))
 	templ.Execute(respWriter, data)
-}
-
-func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
-	//{branchId}/{mediaType}/{title}
-	//TODO: parse parameter, return static data for test HTMX frontend
-	branchCode := request.PathValue("branchCode")
-	mediaType := request.PathValue("mediaType")
-	title := request.PathValue("title")
-	log.Printf("%s - %s - %s", branchCode, mediaType, title)
-	fmt.Fprintf(respWriter, "11.08.24")
 }

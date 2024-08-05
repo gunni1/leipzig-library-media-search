@@ -12,7 +12,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center {{ if not .IsAvailable }}list-group-item-dark{{ end }}">
                     {{ .Title }}
                     {{ if not .IsAvailable }}
-                        <button hx-get="/return-date/{{urlquery .Branch }}/{{ $.MediaType }}/{{urlquery .Title }}" 
+                        <button hx-get="/return-date/{{encodeBranch .Branch }}/{{ $.MediaType }}/{{urlquery .Title }}" 
                             hx-trigger="click"
                             class="badge bg-primary rounded-pill">lade Rückgabe</button>
                     {{ end }}
