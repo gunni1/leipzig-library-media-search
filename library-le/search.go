@@ -28,7 +28,7 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 		fmt.Println(sessionErr)
 		return nil
 	}
-	searchRequest := NewMovieSearchRequest(title, libClient.session)
+	searchRequest := NewMovieSearchRequest(title, 0, libClient.session)
 	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(searchRequest)
 	if err != nil {
@@ -52,7 +52,7 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 		fmt.Println(sessionErr)
 		return nil
 	}
-	searchRequest := NewGameSearchRequest(title, platform, libClient.session)
+	searchRequest := NewGameSearchRequest(title, platform, 0, libClient.session)
 	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(searchRequest)
 	if err != nil {
@@ -67,13 +67,11 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 	return games
 }
 
-func (libClient Client) RetrieveReturnDate(mediaType string, branchCode int, title string) (string, error) {
-	var request *http.Request
-	if mediaType == domain.MOVIE {
+func (libClient Client) RetrieveReturnDate(branchCode int, platform string, title string) (string, error) {
+	request := NewReturnDateRequest(title, platform, branchCode, libClient.session)
+	httpClient := http.Client{}
+	returnDateResponse, err := httpClient.Do(request)
 
-	} else if mediaType == domain.GAME {
-
-	}
 	return "", nil
 }
 

@@ -32,7 +32,7 @@ func InitMux() *http.ServeMux {
 	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	mux.HandleFunc("/games-search/", gameSearchHandler)
-	mux.HandleFunc("GET /return-date/{branchCode}/{mediaType}/{title}", returnDateHandler)
+	mux.HandleFunc("GET /return-date/{branchCode}/{platform}/{title}", returnDateHandler)
 	return mux
 }
 
@@ -72,12 +72,12 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 }
 
 func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
-	branchCode, _ := strrequest.PathValue("branchCode"))
-	mediaType := request.PathValue("mediaType")
+	branchCode, _ := strconv.Atoi(request.PathValue("branchCode"))
+	platform := request.PathValue("platform")
 	title := request.PathValue("title")
-	log.Printf("%s - %s - %s", branchCode, mediaType, title)
+	log.Printf("%s - %s - %s", branchCode, platform, title)
 	client := libClient.Client{}
-	returnDate, _ := client.RetrieveReturnDate(mediaType, branchCode, title)
+	returnDate, _ := client.RetrieveReturnDate(branchCode, platform, title)
 	//TODO error handling
 	fmt.Fprintf(respWriter, returnDate)
 }
@@ -87,9 +87,6 @@ func renderMediaResults(media []domain.Media, mediaType string, respWriter http.
 		fmt.Fprint(respWriter, "<p>Es wurden keine Titel gefunden.</p>")
 		return
 	}
-
-	//Transform branch to branchCode
-	//url encode title
 	byBranch := arrangeByBranch(media)
 	data := MediaTemplateData{
 		Branches:  byBranch,
