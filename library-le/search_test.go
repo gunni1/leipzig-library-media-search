@@ -80,3 +80,22 @@ func TestRemoveBranchSuffix(t *testing.T) {
 	Equal(t, "Fahrbibliothek", removeBranchSuffix("Fahrbibliothek"))
 	Equal(t, "", removeBranchSuffix(""))
 }
+
+func TestFilterSearchResult(t *testing.T) {
+	search := []searchResult{
+		{title: "Terminator"},
+		{title: "Terminator 2"},
+	}
+	filtered := filterExactTitle("Terminator", search)
+	Equal(t, 1, len(filtered))
+	Equal(t, "Terminator", filtered[0].title)
+}
+
+func TestExtractDate(t *testing.T) {
+	date, emptyErr := extractDate("Today is the 20.08.2024.")
+	Equal(t, "20.08.2024", date)
+	Nil(t, emptyErr)
+
+	_, err := extractDate("Whops, this date has a formatting issue: 11.11,2011")
+	NotNil(t, err)
+}

@@ -70,9 +70,14 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 func (libClient Client) RetrieveReturnDate(branchCode int, platform string, title string) (string, error) {
 	request := NewReturnDateRequest(title, platform, branchCode, libClient.session)
 	httpClient := http.Client{}
-	returnDateResponse, err := httpClient.Do(request)
-
-	return "", nil
+	searchResponse, err := httpClient.Do(request)
+	if err != nil {
+		log.Printf("Error during search: %s", err.Error())
+		return "-", err
+	}
+	resultTitles := extractTitles(searchResponse.Body)
+	exactMatchTitles := filterExactTitle(title, resultTitles)
+	return loadMediaReturnDate(exactMatchTitles, libClient.session)
 }
 
 // Load all existing copys of a result title over all library branches
@@ -82,10 +87,68 @@ func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.M
 	httpClient := http.Client{}
 	mediaResponse, err := httpClient.Do(request)
 	if err != nil {
-		log.Println("error during search")
+		log.Printf("Error during search: %s", err.Error())
 		return nil
 	}
 	return parseMediaCopiesPage(result.title, mediaResponse.Body)
+}
+
+// load the return date for a searched title. Return the date of the first copy found.
+func (result searchResult) loadReturnDate(libSession webOpacSession) (string, error) {
+	request := createRequest(libSession, result.resultUrl)
+	httpClient := http.Client{}
+	mediaResponse, err := httpClient.Do(request)
+	if err != nil {
+		log.Printf("Error during search: %s", err.Error())
+		return "", nil
+	}
+	return findReturnDateInCopiesPage(mediaResponse.Body)
+}
+
+func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (string, error) {
+	//do a request for every searchresult
+	for _, title := range titles {
+		returnDate, err := title.loadReturnDate(libSession)
+		if err != nil {
+			return returnDate, nil
+		}
+		log.Printf("No return date found for title %s ", title.title)
+	}
+	return "", fmt.Errorf("No return date found")
+}
+
+// find a return date for a copy or return an error instead.
+func findReturnDateInCopiesPage(page io.Reader) (string, error) {
+	doc, docErr := goquery.NewDocumentFromReader(page)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return "", docErr
+	}
+	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
+		rentalStateLink := copy.Find("div:nth-child(5) > div > a")
+		rentalStateLink.Text() //TODO: find date string
+	})
+	return "", fmt.Errorf("found no copy with a return date")
+}
+
+// find a date string inside a string. Format DD.MM.YYYY
+func extractDate(text string) (string, error) {
+	dateForm := regexp.MustCompile(`\d{2}\.\d{2}\.\d{4}`)
+	date := dateForm.FindString(text)
+	if date == "" {
+		return "", fmt.Errorf("no date found in: %s", text)
+	}
+	return date, nil
+}
+
+func filterExactTitle(title string, results []searchResult) []searchResult {
+	filtered := make([]searchResult, 0)
+	for _, result := range results {
+		if result.title == title {
+			filtered = append(filtered, result)
+		}
+	}
+	return filtered
 }
 
 // Go through the search overview page and create a result object for each title found.
