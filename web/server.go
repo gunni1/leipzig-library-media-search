@@ -3,6 +3,7 @@ package web
 import (
 	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"strings"
@@ -15,14 +16,15 @@ import (
 //go:embed templates
 var htmlTemplates embed.FS
 
-//go:embed static
+//go:embed static/*
 var staticHtml embed.FS
 
 // Create Mux and setup routes
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
+	fileSys, _ := fs.Sub(staticHtml, "static")
 
-	mux.Handle("/", http.FileServer(http.FS(staticHtml)))
+	mux.Handle("/", http.FileServer(http.FS(fileSys)))
 	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	mux.HandleFunc("/games-search/", gameSearchHandler)
