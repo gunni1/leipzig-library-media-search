@@ -15,11 +15,14 @@ import (
 //go:embed templates
 var htmlTemplates embed.FS
 
+//go:embed static
+var staticHtml embed.FS
+
 // Create Mux and setup routes
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.Handle("/", http.FileServer(http.Dir("web/static")))
+	mux.Handle("/", http.FileServer(http.FS(staticHtml)))
 	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	mux.HandleFunc("/games-search/", gameSearchHandler)
