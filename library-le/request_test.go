@@ -21,7 +21,7 @@ func TestMovieSearchRequestHasQueryParamsSet(t *testing.T) {
 	Equal(t, "3", request.URL.Query().Get("searchRestrictionID[2]"))
 	Equal(t, "29", request.URL.Query().Get("searchRestrictionValue1[2]"))
 	Equal(t, "0", request.URL.Query().Get("selectedViewBranchlib"))
-	Empty(t, request.URL.Query().Get("selectedSearchBranchlib"))
+	Equal(t, "0", request.URL.Query().Get("selectedSearchBranchlib"))
 }
 
 func TestMovieReturnDateRequest(t *testing.T) {

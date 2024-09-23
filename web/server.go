@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"text/template"
@@ -74,12 +75,12 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
 	branchCode, _ := strconv.Atoi(request.PathValue("branchCode"))
 	platform := request.PathValue("platform")
-	title := request.PathValue("title")
-	log.Printf("%s - %s - %s", branchCode, platform, title)
-	client := libClient.Client{}
+	title, _ := url.QueryUnescape(request.PathValue("title")) //TODO: unencode
+	log.Printf("%d - %s - %s", branchCode, platform, title)
+	client := libClient.NewClientWithSession()
 	returnDate, _ := client.RetrieveReturnDate(branchCode, platform, title)
 	//TODO error handling
-	fmt.Fprintf(respWriter, returnDate)
+	fmt.Fprint(respWriter, returnDate)
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter) {
@@ -95,7 +96,8 @@ func renderMediaResults(media []domain.Media, mediaType string, respWriter http.
 	templ, _ := template.New("item-list-by-branch.html").Funcs(template.FuncMap{
 		"encodeBranch": encodeBranch,
 	}).ParseFS(htmlTemplates, "templates/item-list-by-branch.html")
-	templ.Execute(respWriter, data)
+	err := templ.Execute(respWriter, data)
+	log.Println(err)
 }
 
 func encodeBranch(branchName string) int {

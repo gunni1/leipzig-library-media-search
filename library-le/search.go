@@ -10,6 +10,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -75,7 +76,7 @@ func (libClient Client) RetrieveReturnDate(branchCode int, platform string, titl
 		log.Printf("Error during search: %s", err.Error())
 		return "-", err
 	}
-	resultTitles := extractTitles(searchResponse.Body)
+	resultTitles := extractTitles(searchResponse.Body) //TODO: wenn nur 1 Ergebnis vorhanden wird direkt auf die copies Seite geleitet
 	exactMatchTitles := filterExactTitle(title, resultTitles)
 	return loadMediaReturnDate(exactMatchTitles, libClient.session)
 }
@@ -107,14 +108,15 @@ func (result searchResult) loadReturnDate(libSession webOpacSession) (string, er
 
 func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (string, error) {
 	//do a request for every searchresult
+	//TODO: find earliest date
 	for _, title := range titles {
 		returnDate, err := title.loadReturnDate(libSession)
-		if err != nil {
+		if err == nil {
 			return returnDate, nil
 		}
 		log.Printf("No return date found for title %s ", title.title)
 	}
-	return "", fmt.Errorf("No return date found")
+	return "", errors.New("No return date found")
 }
 
 // find a return date for a copy or return an error instead.
@@ -124,11 +126,19 @@ func findReturnDateInCopiesPage(page io.Reader) (string, error) {
 		log.Println("Could not create document from response.")
 		return "", docErr
 	}
+	returnDate := ""
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		rentalStateLink := copy.Find("div:nth-child(5) > div > a")
-		rentalStateLink.Text() //TODO: find date string
+		dateStr, findErr := extractDate(rentalStateLink.Text())
+		if findErr == nil {
+			returnDate = dateStr
+		}
 	})
-	return "", fmt.Errorf("found no copy with a return date")
+	if returnDate != "" {
+		return returnDate, nil
+	} else {
+		return "", errors.New("found no copy with a return date")
+	}
 }
 
 // find a date string inside a string. Format DD.MM.YYYY
@@ -180,8 +190,11 @@ func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
+		//TODO: finde Medienart und speichere als platform attribut
+		//
+		platform := "bluray"
 		status := isMediaAvailable(copy)
-		movies = append(movies, domain.Media{Title: title, Branch: removeBranchSuffix(branch), IsAvailable: status})
+		movies = append(movies, domain.Media{Title: title, Branch: removeBranchSuffix(branch), Platform: platform, IsAvailable: status})
 	})
 	return movies
 }
