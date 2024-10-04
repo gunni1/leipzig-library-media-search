@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -19,6 +21,9 @@ var htmlTemplates embed.FS
 //go:embed static/*
 var staticHtml embed.FS
 
+const MOVIE string = "movie"
+const GAME string = "game"
+
 // Create Mux and setup routes
 func InitMux() *http.ServeMux {
 	mux := http.NewServeMux()
@@ -28,12 +33,18 @@ func InitMux() *http.ServeMux {
 	mux.HandleFunc("/games-index/", gameIndexHandler)
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	mux.HandleFunc("/games-search/", gameSearchHandler)
+	mux.HandleFunc("GET /return-date/{branchCode}/{platform}/{title}", returnDateHandler)
 	return mux
 }
 
 type MediaByBranch struct {
 	Branch string
 	Media  []domain.Media
+}
+
+type MediaTemplateData struct {
+	MediaType string
+	Branches  []MediaByBranch
 }
 
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -46,7 +57,7 @@ func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if !showNotAvailable {
 		games = filterAvailable(games)
 	}
-	renderMediaResults(games, respWriter)
+	renderMediaResults(games, domain.GAME, respWriter)
 }
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -58,20 +69,49 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if !showNotAvailable {
 		movies = filterAvailable(movies)
 	}
-	renderMediaResults(movies, respWriter)
+	renderMediaResults(movies, domain.MOVIE, respWriter)
 }
 
-func renderMediaResults(media []domain.Media, respWriter http.ResponseWriter) {
+func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
+	branchCode, _ := strconv.Atoi(request.PathValue("branchCode"))
+	platform := request.PathValue("platform")
+	title, _ := url.QueryUnescape(request.PathValue("title"))
+	client := libClient.NewClientWithSession()
+	returnDate, err := client.RetrieveReturnDate(branchCode, platform, title)
+	if err != nil {
+		fmt.Fprint(respWriter, "unbekannt")
+		return
+	}
+	fmt.Fprint(respWriter, returnDate)
+}
+
+func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter) {
 	if len(media) == 0 {
 		fmt.Fprint(respWriter, "<p>Es wurden keine Titel gefunden.</p>")
 		return
 	}
 	byBranch := arrangeByBranch(media)
-	data := map[string][]MediaByBranch{
-		"Branches": byBranch,
+	data := MediaTemplateData{
+		Branches:  byBranch,
+		MediaType: mediaType,
 	}
-	templ := template.Must(template.ParseFS(htmlTemplates, "templates/item-list-by-branch.html"))
-	templ.Execute(respWriter, data)
+	templ, _ := template.New("item-list-by-branch.html").Funcs(template.FuncMap{
+		"encodeBranch": encodeBranch,
+	}).ParseFS(htmlTemplates, "templates/item-list-by-branch.html")
+	err := templ.Execute(respWriter, data)
+	log.Println(err)
+}
+
+func encodeBranch(branchName string) int {
+	tokens := strings.Split(branchName, " ")
+	var branch string
+	if len(tokens) > 1 {
+		branch = tokens[1]
+	} else {
+		branch = tokens[0]
+	}
+	code, _ := libClient.GetBranchCode(branch)
+	return code
 }
 
 func filterAvailable(medias []domain.Media) []domain.Media {
@@ -95,7 +135,6 @@ func arrangeByBranch(medias []domain.Media) []MediaByBranch {
 			byBranch[media.Branch] = []domain.Media{media}
 		}
 	}
-
 	for branch, mds := range byBranch {
 		result = append(result, MediaByBranch{Branch: branch, Media: mds})
 	}
@@ -117,7 +156,6 @@ func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 		fmt.Fprint(respWriter, "<p>Es wurden keine ausleihbaren Titel gefunden.</p>")
 		return
 	}
-
 	data := map[string][]domain.Game{
 		"Items": games,
 	}

@@ -1,8 +1,11 @@
 package libraryle
 
 import (
+	"io"
+	"strings"
 	"testing"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 	. "github.com/stretchr/testify/assert"
 )
@@ -12,10 +15,10 @@ func TestParseGameCopiesResult(t *testing.T) {
 	games := parseMediaCopiesPage("Monster Hunter Rise", testResponse)
 	Equal(t, 4, len(games))
 
-	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
-	mediaEqualTo(t, games[1], "Monster Hunter Rise", "Stadtbibliothek / Jugendbereich - 2.OG", false)
-	mediaEqualTo(t, games[2], "Monster Hunter Rise", "Bibliothek Südvorstadt / Erwachsenenbibliothek - EG", true)
-	mediaEqualTo(t, games[3], "Monster Hunter Rise", "Bibliothek Gohlis / Kinderbibliothek", false)
+	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek", false)
+	mediaEqualTo(t, games[1], "Monster Hunter Rise", "Stadtbibliothek", false)
+	mediaEqualTo(t, games[2], "Monster Hunter Rise", "Bibliothek Südvorstadt", true)
+	mediaEqualTo(t, games[3], "Monster Hunter Rise", "Bibliothek Gohlis", false)
 }
 
 func mediaEqualTo(t *testing.T, media domain.Media, exptTitle string, exptBranch string, exptAvalia bool) {
@@ -40,7 +43,7 @@ func TestParseMovieCopiesResult(t *testing.T) {
 
 func TestParseSearchResultMovies(t *testing.T) {
 	testResponse := loadTestData("testdata/movie_search_result.html")
-	results := extractTitles(testResponse)
+	results := extractTitles(asDoc(testResponse))
 	Equal(t, 3, len(results))
 
 	Equal(t, "Der Clou", results[0].title)
@@ -56,7 +59,7 @@ func TestParseSearchResultMovies(t *testing.T) {
 
 func TestParseSearchResultGames(t *testing.T) {
 	testResponse := loadTestData("testdata/game_search_result.html")
-	results := extractTitles(testResponse)
+	results := extractTitles(asDoc(testResponse))
 	Equal(t, 3, len(results))
 
 	Equal(t, "Monster hunter generations ultimate", results[0].title)
@@ -72,4 +75,53 @@ func TestParseSearchResultGames(t *testing.T) {
 func TestClearTitle(t *testing.T) {
 	Equal(t, "Terminator", clearTitle("Terminator [Bildtonträger]"))
 	Equal(t, "Mad Max - Fury Road", clearTitle("Mad Max - Fury Road [blu-ray]"))
+}
+
+func TestRemoveBranchSuffix(t *testing.T) {
+	Equal(t, "Bibliothek Gohlis", removeBranchSuffix("Bibliothek Gohlis / Erwachsenenbibliothek"))
+	Equal(t, "Bibliothek Grünau-Nord", removeBranchSuffix("Bibliothek Grünau-Nord / Erwachsenenbibliothek"))
+	Equal(t, "Fahrbibliothek", removeBranchSuffix("Fahrbibliothek"))
+	Equal(t, "", removeBranchSuffix(""))
+}
+
+func TestDetermPlatform(t *testing.T) {
+	Equal(t, "dvd", determinePlatform("Umfang:\n    1 DVD-Video (131 Min.)"))
+	Equal(t, "bluray", determinePlatform("Umfang:\n    1 Blu-ray Disc (138 min)"))
+	Equal(t, "", determinePlatform("nix"))
+}
+
+func TestFilterSearchResult(t *testing.T) {
+	search := []searchResult{
+		{title: "Terminator"},
+		{title: "Terminator 2"},
+	}
+	filtered := filterExactTitle("Terminator", search)
+	Equal(t, 1, len(filtered))
+	Equal(t, "Terminator", filtered[0].title)
+}
+
+func TestExtractDate(t *testing.T) {
+	date, emptyErr := extractDate("Today is the 20.08.2024.")
+	Equal(t, "20.08.2024", date)
+	Nil(t, emptyErr)
+
+	_, err := extractDate("Whops, this date has a formatting issue: 11.11,2011")
+	NotNil(t, err)
+}
+
+func TestIsSinglePageResultTRUE(t *testing.T) {
+	data := strings.NewReader("<html><head><title>   \n Einzeltreffer   \n </title></head></html>")
+	result := isSingleResultPage(asDoc(data))
+	True(t, result)
+}
+
+func TestIsSinglePageResultFALSE(t *testing.T) {
+	data := strings.NewReader("<html><head><title> Trefferliste </title></head></html>")
+	result := isSingleResultPage(asDoc(data))
+	False(t, result)
+}
+
+func asDoc(reader io.Reader) *goquery.Document {
+	doc, _ := goquery.NewDocumentFromReader(reader)
+	return doc
 }
