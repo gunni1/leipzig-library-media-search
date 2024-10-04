@@ -75,7 +75,7 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
 	branchCode, _ := strconv.Atoi(request.PathValue("branchCode"))
 	platform := request.PathValue("platform")
-	title, _ := url.QueryUnescape(request.PathValue("title")) //TODO: unencode
+	title, _ := url.QueryUnescape(request.PathValue("title"))
 	log.Printf("%d - %s - %s", branchCode, platform, title)
 	client := libClient.NewClientWithSession()
 	returnDate, _ := client.RetrieveReturnDate(branchCode, platform, title)

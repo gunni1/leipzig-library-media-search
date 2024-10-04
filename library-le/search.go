@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	copiesSelector string = "#tab-content > div > div:nth-child(n+2)"
+	copiesSelector    string = "#tab-content > div > div:nth-child(n+2)"
+	mediaTypeSelector string = "div.results-teaser > div > div > ul > li:nth-child(4)"
 )
 
 type searchResult struct {
@@ -36,7 +37,12 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 		log.Println(err)
 		return nil
 	}
-	resultTitles := extractTitles(searchResponse.Body)
+	doc, docErr := goquery.NewDocumentFromReader(searchResponse.Body)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return nil
+	}
+	resultTitles := extractTitles(doc)
 
 	movies := make([]domain.Media, 0)
 	//TODO: Parallel Ergbnislinks folgen und Details sammeln
@@ -60,7 +66,12 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 		log.Println(err)
 		return nil
 	}
-	resultTitles := extractTitles(searchResponse.Body)
+	doc, docErr := goquery.NewDocumentFromReader(searchResponse.Body)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return nil
+	}
+	resultTitles := extractTitles(doc)
 	games := make([]domain.Media, 0)
 	for _, resultTitle := range resultTitles {
 		games = append(games, resultTitle.loadMediaCopies(libClient.session)...)
@@ -76,9 +87,24 @@ func (libClient Client) RetrieveReturnDate(branchCode int, platform string, titl
 		log.Printf("Error during search: %s", err.Error())
 		return "-", err
 	}
-	resultTitles := extractTitles(searchResponse.Body) //TODO: wenn nur 1 Ergebnis vorhanden wird direkt auf die copies Seite geleitet
-	exactMatchTitles := filterExactTitle(title, resultTitles)
-	return loadMediaReturnDate(exactMatchTitles, libClient.session)
+	doc, docErr := goquery.NewDocumentFromReader(searchResponse.Body)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return "", docErr
+	}
+
+	if isSingleResultPage(doc) {
+		return findReturnDateInCopiesPage(doc) //!Read from the same reader twice, which is not possible
+	} else {
+		resultTitles := extractTitles(doc)
+		exactMatchTitles := filterExactTitle(title, resultTitles)
+		return loadMediaReturnDate(exactMatchTitles, libClient.session)
+	}
+}
+
+func isSingleResultPage(doc *goquery.Document) bool {
+	pageTitle := doc.Find("title").Text()
+	return strings.TrimSpace(pageTitle) == "Einzeltreffer"
 }
 
 // Load all existing copys of a result title over all library branches
@@ -103,7 +129,12 @@ func (result searchResult) loadReturnDate(libSession webOpacSession) (string, er
 		log.Printf("Error during search: %s", err.Error())
 		return "", nil
 	}
-	return findReturnDateInCopiesPage(mediaResponse.Body)
+	doc, docErr := goquery.NewDocumentFromReader(mediaResponse.Body)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return "", docErr
+	}
+	return findReturnDateInCopiesPage(doc)
 }
 
 func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (string, error) {
@@ -120,12 +151,7 @@ func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (stri
 }
 
 // find a return date for a copy or return an error instead.
-func findReturnDateInCopiesPage(page io.Reader) (string, error) {
-	doc, docErr := goquery.NewDocumentFromReader(page)
-	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return "", docErr
-	}
+func findReturnDateInCopiesPage(doc *goquery.Document) (string, error) {
 	returnDate := ""
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		rentalStateLink := copy.Find("div:nth-child(5) > div > a")
@@ -163,12 +189,7 @@ func filterExactTitle(title string, results []searchResult) []searchResult {
 
 // Go through the search overview page and create a result object for each title found.
 // The result contain details of each copie availabile of the media.
-func extractTitles(searchResponse io.Reader) []searchResult {
-	doc, docErr := goquery.NewDocumentFromReader(searchResponse)
-	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return nil
-	}
+func extractTitles(doc *goquery.Document) []searchResult {
 	titles := make([]searchResult, 0)
 	doc.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
 		title := clearTitle(resultItem.Find(titleSelector).Text())
@@ -187,16 +208,27 @@ func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 		return nil
 	}
 	movies := make([]domain.Media, 0)
+	platformIndicator := doc.Find(mediaTypeSelector).Text()
+	platform := determinePlatform(platformIndicator)
 
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
-		//TODO: finde Medienart und speichere als platform attribut
-		//
-		platform := "bluray"
+		//TODO: finde Medienart und speichere als platform attribut (bluray/dvd)
 		status := isMediaAvailable(copy)
 		movies = append(movies, domain.Media{Title: title, Branch: removeBranchSuffix(branch), Platform: platform, IsAvailable: status})
 	})
 	return movies
+}
+
+// Look for DVD or Blu-Ray in a String to decide a movie platform
+func determinePlatform(platformIndicator string) string {
+	platform := strings.ToLower(platformIndicator)
+	if strings.Contains(platform, "dvd") {
+		return "dvd"
+	} else if strings.Contains(platform, "blu-ray") {
+		return "bluray"
+	}
+	return ""
 }
 
 // Remove location detail suffix from branch name
@@ -217,5 +249,5 @@ func isMediaAvailable(copy *goquery.Selection) bool {
 		return false
 	}
 	statusText := copy.Find("div:nth-child(5)").Text()
-	return strings.Contains(statusText, "ausleihbar")
+	return strings.Contains(statusText, "ausleihbar") || strings.Contains(statusText, "frei")
 }

@@ -1,8 +1,11 @@
 package libraryle
 
 import (
+	"io"
+	"strings"
 	"testing"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 	. "github.com/stretchr/testify/assert"
 )
@@ -40,7 +43,7 @@ func TestParseMovieCopiesResult(t *testing.T) {
 
 func TestParseSearchResultMovies(t *testing.T) {
 	testResponse := loadTestData("testdata/movie_search_result.html")
-	results := extractTitles(testResponse)
+	results := extractTitles(asDoc(testResponse))
 	Equal(t, 3, len(results))
 
 	Equal(t, "Der Clou", results[0].title)
@@ -56,7 +59,7 @@ func TestParseSearchResultMovies(t *testing.T) {
 
 func TestParseSearchResultGames(t *testing.T) {
 	testResponse := loadTestData("testdata/game_search_result.html")
-	results := extractTitles(testResponse)
+	results := extractTitles(asDoc(testResponse))
 	Equal(t, 3, len(results))
 
 	Equal(t, "Monster hunter generations ultimate", results[0].title)
@@ -81,6 +84,12 @@ func TestRemoveBranchSuffix(t *testing.T) {
 	Equal(t, "", removeBranchSuffix(""))
 }
 
+func TestDetermPlatform(t *testing.T) {
+	Equal(t, "dvd", determinePlatform("Umfang:\n    1 DVD-Video (131 Min.)"))
+	Equal(t, "bluray", determinePlatform("Umfang:\n    1 Blu-ray Disc (138 min)"))
+	Equal(t, "", determinePlatform("nix"))
+}
+
 func TestFilterSearchResult(t *testing.T) {
 	search := []searchResult{
 		{title: "Terminator"},
@@ -98,4 +107,21 @@ func TestExtractDate(t *testing.T) {
 
 	_, err := extractDate("Whops, this date has a formatting issue: 11.11,2011")
 	NotNil(t, err)
+}
+
+func TestIsSinglePageResultTRUE(t *testing.T) {
+	data := strings.NewReader("<html><head><title>   \n Einzeltreffer   \n </title></head></html>")
+	result := isSingleResultPage(asDoc(data))
+	True(t, result)
+}
+
+func TestIsSinglePageResultFALSE(t *testing.T) {
+	data := strings.NewReader("<html><head><title> Trefferliste </title></head></html>")
+	result := isSingleResultPage(asDoc(data))
+	False(t, result)
+}
+
+func asDoc(reader io.Reader) *goquery.Document {
+	doc, _ := goquery.NewDocumentFromReader(reader)
+	return doc
 }
