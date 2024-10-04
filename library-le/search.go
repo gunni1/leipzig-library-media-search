@@ -213,7 +213,6 @@ func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
 
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
-		//TODO: finde Medienart und speichere als platform attribut (bluray/dvd)
 		status := isMediaAvailable(copy)
 		movies = append(movies, domain.Media{Title: title, Branch: removeBranchSuffix(branch), Platform: platform, IsAvailable: status})
 	})
