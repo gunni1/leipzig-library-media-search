@@ -94,7 +94,7 @@ func (libClient Client) RetrieveReturnDate(branchCode int, platform string, titl
 	}
 
 	if isSingleResultPage(doc) {
-		return findReturnDateInCopiesPage(doc) //!Read from the same reader twice, which is not possible
+		return findReturnDateInCopiesPage(doc)
 	} else {
 		resultTitles := extractTitles(doc)
 		exactMatchTitles := filterExactTitle(title, resultTitles)
