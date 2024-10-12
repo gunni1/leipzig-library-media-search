@@ -15,7 +15,7 @@ build-cli:
 	go build ./...
 	go build -o bin/cli cmd/cli/main.go
 
-docker:
+docker-build:
 	docker build -t gunni1/lib-api:local .
 
 docker-run:
