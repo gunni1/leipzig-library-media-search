@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	LIB_BASE_URL = "https://webopac.stadtbibliothek-leipzig.de"
+	LIB_BASE_URL = "https://bibliothekskatalog.leipzig.de"
 )
 
 type Client struct {
