@@ -12,7 +12,7 @@ import (
 
 func TestParseGameCopiesResult(t *testing.T) {
 	testResponse := loadTestData("testdata/game_copies_example.html")
-	games := parseMediaCopiesPage("Monster Hunter Rise", testResponse)
+	games := parseMediaCopiesPage("Monster Hunter Rise", asDoc(testResponse))
 	Equal(t, 4, len(games))
 
 	mediaEqualTo(t, games[0], "Monster Hunter Rise", "Stadtbibliothek", false)
@@ -29,7 +29,7 @@ func mediaEqualTo(t *testing.T, media domain.Media, exptTitle string, exptBranch
 
 func TestParseMovieCopiesResult(t *testing.T) {
 	testResponse := loadTestData("testdata/movie_copies_example.html")
-	movies := parseMediaCopiesPage("Terminator - Genesis", testResponse)
+	movies := parseMediaCopiesPage("Terminator - Genesis", asDoc(testResponse))
 	Equal(t, 6, len(movies))
 
 	available := 0

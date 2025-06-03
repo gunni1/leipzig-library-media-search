@@ -2,7 +2,6 @@ package libraryle
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"regexp"
@@ -42,8 +41,10 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 		log.Println("Could not create document from response.")
 		return nil
 	}
+	if isSingleResultPage(doc) {
+		return parseMediaCopiesPage(title, doc)
+	}
 	resultTitles := extractTitles(doc)
-
 	movies := make([]domain.Media, 0)
 	//TODO: Parallel Ergbnislinks folgen und Details sammeln
 	for _, resultTitle := range resultTitles {
@@ -54,8 +55,7 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 
 // Search for a specific game title in all library branches
 func (libClient Client) FindGames(title string, platform string) []domain.Media {
-	sessionErr := libClient.openSession()
-	if sessionErr != nil {
+	if sessionErr := libClient.openSession(); sessionErr != nil {
 		fmt.Println(sessionErr)
 		return nil
 	}
@@ -70,6 +70,9 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 	if docErr != nil {
 		log.Println("Could not create document from response.")
 		return nil
+	}
+	if isSingleResultPage(doc) {
+		return parseMediaCopiesPage(title, doc)
 	}
 	resultTitles := extractTitles(doc)
 	games := make([]domain.Media, 0)
@@ -117,7 +120,12 @@ func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.M
 		log.Printf("Error during search: %s", err.Error())
 		return nil
 	}
-	return parseMediaCopiesPage(result.title, mediaResponse.Body)
+	doc, docErr := goquery.NewDocumentFromReader(mediaResponse.Body)
+	if docErr != nil {
+		log.Println("Could not create document from response.")
+		return nil
+	}
+	return parseMediaCopiesPage(result.title, doc)
 }
 
 // load the return date for a searched title. Return the date of the first copy found.
@@ -201,16 +209,13 @@ func extractTitles(doc *goquery.Document) []searchResult {
 
 // the media copies page is a list of library branches which have the specific copy of a title
 // it have information about the availability of the media
-func parseMediaCopiesPage(title string, page io.Reader) []domain.Media {
-	doc, docErr := goquery.NewDocumentFromReader(page)
-	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return nil
-	}
+func parseMediaCopiesPage(title string, doc *goquery.Document) []domain.Media {
 	movies := make([]domain.Media, 0)
 	platformIndicator := doc.Find(mediaTypeSelector).Text()
 	platform := determinePlatform(platformIndicator)
-
+	if platform == "" {
+		log.Printf("Could not determ platform for title: %s. Used indicator: %s\n", title, platformIndicator)
+	}
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
 		status := isMediaAvailable(copy)
@@ -228,6 +233,7 @@ func determinePlatform(platformIndicator string) string {
 		return "bluray"
 	}
 	return ""
+	//TODO #15: this also need to work with game platforms !!!
 }
 
 // Remove location detail suffix from branch name

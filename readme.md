@@ -87,3 +87,6 @@ Suchergebnisse werden mit dem Parametern `searchRestrictionID[]` und `searchRest
 |83     |Bibliothek Grünau-Nord         |   							
 |84     |Bibliothek Grünau-Süd          |   							
 |90     |Fahrbibliothek                 |   		
+
+# Projektstruktur
+ tbd. 
