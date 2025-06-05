@@ -85,9 +85,11 @@ func TestRemoveBranchSuffix(t *testing.T) {
 }
 
 func TestDetermPlatform(t *testing.T) {
-	Equal(t, "dvd", determinePlatform("Umfang:\n    1 DVD-Video (131 Min.)"))
-	Equal(t, "bluray", determinePlatform("Umfang:\n    1 Blu-ray Disc (138 min)"))
-	Equal(t, "", determinePlatform("nix"))
+	Equal(t, "xbox", determinePlatform(asDoc(loadTestData("testdata/determ_platform_xbox.html"))))
+	Equal(t, "playstation", determinePlatform(asDoc(loadTestData("testdata/determ_platform_ps.html"))))
+	Equal(t, "switch", determinePlatform(asDoc(loadTestData("testdata/determ_platform_switch.html"))))
+	Equal(t, "dvd", determinePlatform(asDoc(loadTestData("testdata/determ_platform_dvd.html"))))
+	Equal(t, "bluray", determinePlatform(asDoc(loadTestData("testdata/determ_platform_bluray.html"))))
 }
 
 func TestFilterSearchResult(t *testing.T) {

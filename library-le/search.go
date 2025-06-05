@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	copiesSelector    string = "#tab-content > div > div:nth-child(n+2)"
-	mediaTypeSelector string = "div.results-teaser > div > div > ul > li:nth-child(4)"
+	copiesSelector   string = "#tab-content > div > div:nth-child(n+2)"
+	packageSelector  string = "div.results-teaser > div > div > ul > li:nth-child(4)" //Umfang
+	keyWordsSelector string = "div.results-teaser > div > div > ul > li:nth-child(5)" //Schlagwort
 )
 
 type searchResult struct {
@@ -210,30 +211,41 @@ func extractTitles(doc *goquery.Document) []searchResult {
 // the media copies page is a list of library branches which have the specific copy of a title
 // it have information about the availability of the media
 func parseMediaCopiesPage(title string, doc *goquery.Document) []domain.Media {
-	movies := make([]domain.Media, 0)
-	platformIndicator := doc.Find(mediaTypeSelector).Text()
-	platform := determinePlatform(platformIndicator)
+	media := make([]domain.Media, 0)
+
+	platform := determinePlatform(doc)
 	if platform == "" {
-		log.Printf("Could not determ platform for title: %s. Used indicator: %s\n", title, platformIndicator)
+		log.Printf("Could not determ platform for title: %s\n", title)
 	}
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
 		status := isMediaAvailable(copy)
-		movies = append(movies, domain.Media{Title: title, Branch: removeBranchSuffix(branch), Platform: platform, IsAvailable: status})
+		media = append(media, domain.Media{Title: title, Branch: removeBranchSuffix(branch), Platform: platform, IsAvailable: status})
 	})
-	return movies
+	return media
 }
 
-// Look for DVD or Blu-Ray in a String to decide a movie platform
-func determinePlatform(platformIndicator string) string {
-	platform := strings.ToLower(platformIndicator)
-	if strings.Contains(platform, "dvd") {
-		return "dvd"
-	} else if strings.Contains(platform, "blu-ray") {
-		return "bluray"
+// decide on a media platform
+func determinePlatform(doc *goquery.Document) string {
+	keyWords := strings.ToLower(doc.Find(keyWordsSelector).Text())
+	plaformsRx := regexp.MustCompile("playstation|x-box|switch")
+	if plaformsRx.MatchString(keyWords) {
+		if strings.Contains(keyWords, "playstation") {
+			return "playstation"
+		} else if strings.Contains(keyWords, "x-box") {
+			return "xbox"
+		} else if strings.Contains(keyWords, "switch") {
+			return "switch"
+		}
+	} else {
+		moviePlatform := strings.ToLower(doc.Find(packageSelector).Text())
+		if strings.Contains(moviePlatform, "dvd") {
+			return "dvd"
+		} else if strings.Contains(moviePlatform, "blu-ray") {
+			return "bluray"
+		}
 	}
 	return ""
-	//TODO #15: this also need to work with game platforms !!!
 }
 
 // Remove location detail suffix from branch name
