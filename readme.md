@@ -3,10 +3,9 @@
 ## Anzeige verfügbarer Videospiele 
 Die Stadt- und Stadtteilbibliotheken in Leipzig haben zahlreiche aktuelle Videospiele für Switch, PS5, XBox usw. im Katalog. Leider ist der WebOPAC-Katalog recht sperrig zu benutzen und es ist mühsam herauszufinden, welche Spiele in welcher Bibliothek derzeit ausleihbar sind. Spiele sind idR einer bestimmten Zweigstelle zugeordnet, werden vom OPAC aber auch über andere Zweigstellen als "woanders verfügbar" angezeigt. Darüber hinaus, wechselt das Angebot regelmäßig.
 
-## Filmsuche
-Die Stadt- und Stadtteilbibliotheken haben eine Vielzahl an Filmen und Serien ....
-
-## Suche nach Videospielen
+## Suche nach Filem und Videospielen
+Die Stadt- und Stadtteilbibliotheken haben eine Vielzahl an Filmen, Serien und Videospielen. Der Katalog der leipziger Bibliothek ist jedoch für Bücher mit Autorenkürzeln, ISBN usw. ausgelegt, sodass die Suche nach digitalen Medien teils sehr umständlich funktioniert. 
+Die Anwendung besitzt zwei Suchmasken um, so einfach wie möglich, nach Filmen/Serien oder Videospielen zu suchen. Die Ergebnisse werden je Zweigstelle gruppiert. 
 
 # Datenquelle
 Die Datengrundlage ist der WebOPAC-Katalog der Leipziger Stadibibliotheken in der "Erweiterten-Suche" unter `https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do?methodToCall=switchSearchPage&SearchType=2`
