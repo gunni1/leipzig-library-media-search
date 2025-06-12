@@ -1,3 +1,5 @@
-{{ range .Items }}
-    <li class="list-group-item">{{ .Title }}</li>
-{{ end }}
+<ul class="flex flex-col items-center justify-between">
+    {{ range .Items }}
+    <li class="mt-4">{{ .Title }}</li>
+    {{ end }}
+</ul>
