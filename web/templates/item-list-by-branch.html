@@ -1,25 +1,17 @@
 {{ range .Branches }}
-<div class="accordion-item">
-    <h2 class="accordion-header">
-        <span class="accordion-button">
-        {{ .Branch }}
-        </span>
-    </h2>
-    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#display-movies">
-        <div class="accordion-body">
-            <ul class="list-group list-group-flush">
-            {{ range .Media }}
-                <li class="list-group-item d-flex justify-content-between align-items-center {{ if not .IsAvailable }}list-group-item-dark{{ end }}">
-                    {{ .Title }}
-                    {{ if not .IsAvailable }}
-                        <button hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
-                            hx-trigger="click"
-                            class="badge bg-primary rounded-pill">lade Rückgabe</button>
-                    {{ end }}
-                </li>
-            {{ end }}
-            </ul>
-        </div>
-    </div>
+<div class="flex flex-col my-4">
+    <p class="text-lg font-bold">{{ .Branch }}</p>
+    <ul class="list-none">
+        {{ range .Media }}
+            <li class="flex flex-row justify-between ml-2 py-0.5 {{ if not .IsAvailable }}text-gray-300{{ end }}">
+                {{ .Title }}
+                {{ if not .IsAvailable }}
+                    <button hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
+                        hx-trigger="click"
+                        class="rounded-md ml-2 px-2.5 py-1 whitespace-nowrap bg-gray-100 text-black text-xs shadow-xs ring-1 ring-inset">Rückgabe</button>
+                {{ end }}
+            </li>
+        {{ end }}
+    </ul>
 </div>    
 {{ end }}
