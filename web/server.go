@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/gunni1/leipzig-library-game-stock-api/domain"
 	libClient "github.com/gunni1/leipzig-library-game-stock-api/library-le"
@@ -48,6 +49,7 @@ type MediaTemplateData struct {
 }
 
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
+	defer trackExecTime(time.Now(), "game search")
 	title := strings.ToLower(request.PostFormValue("title"))
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	showNotAvailable := strings.ToLower(request.PostFormValue("showNotAvailable")) == "true"
@@ -61,6 +63,7 @@ func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 }
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
+	defer trackExecTime(time.Now(), "movie search")
 	title := strings.ToLower(request.PostFormValue("movie-title"))
 	showNotAvailable := strings.ToLower(request.PostFormValue("showNotAvailable")) == "true"
 
@@ -73,6 +76,7 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 }
 
 func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
+	defer trackExecTime(time.Now(), "return date")
 	branchCode, _ := strconv.Atoi(request.PathValue("branchCode"))
 	platform := request.PathValue("platform")
 	title, _ := url.QueryUnescape(request.PathValue("title"))
@@ -142,6 +146,7 @@ func arrangeByBranch(medias []domain.Media) []MediaByBranch {
 }
 
 func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
+	defer trackExecTime(time.Now(), "game index")
 	branch := strings.ToLower(request.PostFormValue("branch"))
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	branchCode, exists := libClient.GetBranchCode(branch)
@@ -161,4 +166,9 @@ func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	}
 	templ := template.Must(template.ParseFS(htmlTemplates, "templates/item-list.html"))
 	templ.Execute(respWriter, data)
+}
+
+func trackExecTime(start time.Time, desc string) {
+	duration := time.Since(start)
+	fmt.Printf("Request %s took: %s\n", desc, duration)
 }
