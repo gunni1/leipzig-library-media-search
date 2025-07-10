@@ -1,2 +1,4 @@
 bin/*
 .vscode
+
+web/static/tailwind.config.js
