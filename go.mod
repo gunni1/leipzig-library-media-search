@@ -1,6 +1,6 @@
-module github.com/gunni1/leipzig-library-game-stock-api
+module github.com/gunni1/leipzig-library-media-search
 
-go 1.22
+go 1.24.4
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.1

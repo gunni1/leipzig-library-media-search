@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gunni1/leipzig-library-game-stock-api/domain"
+	"github.com/gunni1/leipzig-library-media-search/domain"
 	"github.com/pkg/errors"
 )
 

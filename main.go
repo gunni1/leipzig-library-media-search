@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gunni1/leipzig-library-game-stock-api/web"
+	"github.com/gunni1/leipzig-library-media-search/web"
 )
 
 func main() {
