@@ -25,7 +25,7 @@ type searchResult struct {
 
 // Search for a specific movie title in all library branches
 func (libClient Client) FindMovies(title string) []domain.Media {
-	sessionErr := libClient.openSession()
+	sessionErr := libClient.newSession()
 	if sessionErr != nil {
 		fmt.Println(sessionErr)
 		return nil
@@ -56,7 +56,7 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 
 // Search for a specific game title in all library branches
 func (libClient Client) FindGames(title string, platform string) []domain.Media {
-	if sessionErr := libClient.openSession(); sessionErr != nil {
+	if sessionErr := libClient.newSession(); sessionErr != nil {
 		fmt.Println(sessionErr)
 		return nil
 	}

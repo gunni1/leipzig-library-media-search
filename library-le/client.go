@@ -20,11 +20,11 @@ type webOpacSession struct {
 
 func NewClientWithSession() Client {
 	client := Client{}
-	client.openSession()
+	client.newSession()
 	return client
 }
 
-func (client *Client) openSession() error {
+func (client *Client) newSession() error {
 	resp, err := http.Get(LIB_BASE_URL + "/webOPACClient")
 	if err != nil {
 		return err

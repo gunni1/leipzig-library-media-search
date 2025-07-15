@@ -17,7 +17,7 @@ const (
 )
 
 func (libClient Client) FindAvailabelGames(branchCode int, platform string) []domain.Game {
-	sessionErr := libClient.openSession()
+	sessionErr := libClient.newSession()
 	if sessionErr != nil {
 		fmt.Println(sessionErr)
 		return nil
