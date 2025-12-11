@@ -3,13 +3,26 @@
     <p class="text-lg font-bold">{{ .Branch }}</p>
     <ul class="list-none">
         {{ range .Media }}
-            <li class="flex flex-row justify-between ml-2 py-0.5 {{ if not .IsAvailable }}text-gray-300{{ end }}">
-                {{ .Title }}
-                {{ if not .IsAvailable }}
-                    <button hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
-                        hx-trigger="click"
-                        class="rounded-md ml-2 px-2.5 py-1 whitespace-nowrap bg-gray-100 text-black text-xs shadow-xs ring-1 ring-inset">Rückgabe</button>
-                {{ end }}
+            <li class="ml-2 py-1.5 border-b border-gray-100 last:border-b-0 {{ if not .IsAvailable }}text-gray-300{{ end }}">
+                <div class="grid grid-cols-1">
+                    <div class="flex flex-row justify-between items-center">
+                        <div class="flex items-center">
+                            <span>{{ .Title }}</span>
+                            {{ if eq .Platform "dvd" }}
+                                <img src="icon_dvd.svg" class="w-4 h-4 ml-2" alt="DVD icon">
+                            {{ else if eq .Platform "bluray" }}
+                                <img src="icon_bluray.svg" class="w-4 h-4 ml-2" alt="Blu-ray icon">
+                            {{ end }}
+                        </div>
+                    </div>
+                    {{ if not .IsAvailable }}
+                    <div class="flex items-center mt-1">
+                        <button hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
+                            hx-trigger="click"
+                            class="rounded-md px-2.5 py-1 whitespace-nowrap bg-gray-100 text-black text-xs shadow-xs ring-1 ring-inset">Rückgabe</button>
+                    </div>
+                    {{ end }}
+                </div>
             </li>
         {{ end }}
     </ul>
