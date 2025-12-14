@@ -1,15 +1,46 @@
 {{ range .Branches }}
-<div class="flex flex-col my-4">
-    <p class="text-lg font-bold">{{ .Branch }}</p>
-    <ul class="list-none">
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+    <!-- Branch Header -->
+    <div class="mb-4 pb-3 border-b-2 border-slate-100">
+        <h2 class="text-xl font-bold text-slate-800">{{ .Branch }}</h2>
+    </div>
+    
+    <!-- Items List -->
+    <ul class="space-y-3">
         {{ range .Media }}
-            <li class="flex flex-row justify-between ml-2 py-0.5 {{ if not .IsAvailable }}text-gray-300{{ end }}">
-                {{ .Title }}
-                {{ if not .IsAvailable }}
-                    <button hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
-                        hx-trigger="click"
-                        class="rounded-md ml-2 px-2.5 py-1 whitespace-nowrap bg-gray-100 text-black text-xs shadow-xs ring-1 ring-inset">Rückgabe</button>
-                {{ end }}
+            <li class="group hover:bg-slate-50 rounded-xl p-4 transition-colors {{ if not .IsAvailable }}opacity-40{{ end }}">
+                <div class="flex items-center justify-between gap-4">
+                    <!-- Left: Title & Icon -->
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <!-- Platform Icon -->
+                        <div class="flex-shrink-0">
+                            {{ if eq .Platform "dvd" }}
+                                <img src="icon_dvd.svg" class="w-6 h-6" alt="DVD icon">
+                            {{ else if eq .Platform "bluray" }}
+                                <img src="icon_bluray.svg" class="w-6 h-6" alt="Blu-ray icon">
+                            {{ end }}
+                        </div>
+                        
+                        <!-- Title -->
+                        <span class="text-slate-800 font-medium truncate {{ if not .IsAvailable }}text-slate-200{{ end }}">
+                            {{ .Title }}
+                        </span>
+                    </div>
+                    
+                    <!-- Right: Status/Button -->
+                    <div class="flex-shrink-0">
+                        {{ if not .IsAvailable }}
+                            <button 
+                                hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
+                                hx-trigger="click"
+                                class="px-4 py-2 text-slate-700 text-sm font-medium rounded-lg transition-colors"
+                            >
+                                <img src="return.svg" class="w-6 h-6" alt="Return date">
+                            </button>
+                        
+                        {{ end }}
+                    </div>
+                </div>
             </li>
         {{ end }}
     </ul>

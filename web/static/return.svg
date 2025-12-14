@@ -1,0 +1,17 @@
+<!-- Buch mit Pfeil nach links — Rückgabe-Icon -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Buch zurückgeben">
+  <title>Buch zurückgeben</title>
+  <desc>Closed book with left-pointing return arrow; stroke uses currentColor for easy styling</desc>
+
+  <!-- Buchkörper -->
+  <rect x="10" y="12" width="36" height="40" rx="3" ry="3" fill="none" stroke="currentColor" stroke-width="2.6"></rect>
+  <!-- Buchrücken / Falz -->
+  <line x1="18" y1="14" x2="18" y2="50" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line>
+  <!-- kleiner Linien-Akzent (Seiten) -->
+  <line x1="26" y1="20" x2="42" y2="20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+  <line x1="26" y1="26" x2="42" y2="26" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+
+  <!-- Pfeil (Rückgabe nach links) -->
+  <path d="M52 36 H30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+  <path d="M36 30 L30 36 L36 42" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>

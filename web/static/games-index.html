@@ -5,42 +5,69 @@
         <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     </head>
-    <body>
-        <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <form hx-post="/games-index/" hx-target="#display-games" hx-indicator="#spinner" class="flex flex-col bg-white rounded shadow-md mt-2 p-4">
-                <h2 class="font-semibold">Verfügbare Videospiele</h2>
-                <select id="branchSelect" name="branch" class="border p-2 my-4 border-gray-300 rounded">
-                    <option>Stadtbibliothek</option>
-                    <option>Gohlis</option>
-                    <option>Plagwitz</option>
-                    <option>Wiederitzsch</option>
-                    <option>Böhlitz</option>
-                    <option>Lützschena</option>
-                    <option>Holzhausen</option>
-                    <option>Südvorstadt</option>
-                    <option>Volkmarsdorf</option>
-                    <option>Schönefeld</option>
-                    <option>Paunsdorf</option>
-                    <option>Reudnitz</option>
-                    <option>Mockau</option>
-                    <option>Grünau-Mitte</option>
-                    <option>Grünau-Nord</option>
-                    <option>Grünau-Süd</option>
-                </select> 
-                <select id="platformSelect" name="platform" class="border p-2 mb-4 border-gray-300 rounded">
-                    <option>Switch</option>
-                    <option>XBox</option>
-                    <option>Playstation</option>
-                </select> 
-                <button type="submit" class="rounded-md px-2.5 py-1.5 bg-white text-sm shadow-xs ring-1 ring-inset">Los</button>
-            </form>
-           
-            <div id="spinner" class="htmx-indicator m-2 w-5 h-5 border-2 bg-gray-100 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-
-            <div id="display-games" >
+    <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <!-- Search Card -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <h1 class="text-2xl font-bold text-slate-800 mb-6">Verfügbare Videospiele</h1>
+                
+                <form hx-post="/games-index/" hx-target="#display-games" hx-indicator="#spinner" class="space-y-4">
+                    <!-- Branch Select -->
+                    <div class="relative">
+                        <select 
+                            id="branchSelect" 
+                            name="branch" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option>Stadtbibliothek</option>
+                            <option>Gohlis</option>
+                            <option>Plagwitz</option>
+                            <option>Wiederitzsch</option>
+                            <option>Böhlitz</option>
+                            <option>Lützschena</option>
+                            <option>Holzhausen</option>
+                            <option>Südvorstadt</option>
+                            <option>Volkmarsdorf</option>
+                            <option>Schönefeld</option>
+                            <option>Paunsdorf</option>
+                            <option>Reudnitz</option>
+                            <option>Mockau</option>
+                            <option>Grünau-Mitte</option>
+                            <option>Grünau-Nord</option>
+                            <option>Grünau-Süd</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Platform Select -->
+                    <div class="relative">
+                        <select 
+                            id="platformSelect" 
+                            name="platform" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option>Switch</option>
+                            <option>XBox</option>
+                            <option>Playstation</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors shadow-sm hover:shadow-md"
+                    >
+                        Suchen
+                    </button>
+                </form>
             </div>
-
+            
+            <!-- Loading Spinner -->
+            <div id="spinner" class="htmx-indicator flex justify-center my-8">
+                <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+            
+            <!-- Results Container -->
+            <div id="display-games"></div>
         </div>
-        
     </body>
 </html>

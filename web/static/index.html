@@ -5,22 +5,35 @@
         <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     </head>
-    <body>
-        <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <nav class="bg-white rounded shadow-md m-8" >
-                <ul class="flex flex-col items-center justify-center m-2">
-                    <li class="m-2">
-                        <a href="movies.html" class="font-medium">Filmsuche</a>
-                    </li>
-                    <li class="m-2">
-                        <a href="games.html" class="font-medium">Spielsuche</a>
-                    </li>
-                    <li class="m-2">
-                        <a href="games-index.html" class="font-medium">Verfügbare Spiele</a>
-                    </li>
-                </ul>
-            </nav>
+    <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <!-- Navigation Card -->
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h1 class="text-2xl font-bold text-slate-800 mb-6 text-center">Leipzig Bibliothek</h1>
+                
+                <nav>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="movies.html" 
+                                class="block px-6 py-4 bg-slate-50 hover:bg-blue-50 rounded-xl transition-colors border border-slate-200 hover:border-blue-300">
+                                <span class="text-lg font-medium text-slate-800">Filmsuche</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="games.html" 
+                                class="block px-6 py-4 bg-slate-50 hover:bg-blue-50 rounded-xl transition-colors border border-slate-200 hover:border-blue-300" >
+                                <span class="text-lg font-medium text-slate-800">Spielsuche</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="games-index.html" 
+                                class="block px-6 py-4 bg-slate-50 hover:bg-blue-50 rounded-xl transition-colors border border-slate-200 hover:border-blue-300">
+                                <span class="text-lg font-medium text-slate-800">Verfügbare Spiele</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </div>
-        
     </body>
 </html> 
