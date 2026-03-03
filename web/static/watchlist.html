@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    </head>
+    <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+
+            <!-- Header Card -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold text-slate-800">Merkliste</h1>
+                    <div class="flex items-center gap-3">
+                        <button
+                            id="clear-watchlist"
+                            class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-xl transition-colors"
+                        >Alle löschen</button>
+                        <a
+                            href="index.html"
+                            class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+                        >← Zurück</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-msg" class="hidden bg-white rounded-2xl shadow-lg p-10 text-center text-slate-400">
+                <p class="text-4xl mb-3">☆</p>
+                <p class="text-lg font-medium">Keine Einträge in der Merkliste.</p>
+                <p class="text-sm mt-1">Beim Suchen einfach den Stern neben einem Titel anklicken.</p>
+            </div>
+
+            <!-- Items -->
+            <div id="watchlist-items" class="space-y-4"></div>
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var container = document.getElementById('watchlist-items');
+            var emptyMsg  = document.getElementById('empty-msg');
+
+            function getWatchlist() {
+                try { return JSON.parse(localStorage.getItem('watchlist') || '[]'); }
+                catch (e) { return []; }
+            }
+
+            function escAttr(str) {
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            var platformLabels = {
+                dvd: 'DVD', bluray: 'Blu-ray',
+                switch: 'Switch', playstation: 'PlayStation', xbox: 'Xbox'
+            };
+            var platformColors = {
+                dvd:         'bg-blue-100 text-blue-700',
+                bluray:      'bg-purple-100 text-purple-700',
+                switch:      'bg-red-100 text-red-700',
+                playstation: 'bg-blue-100 text-blue-700',
+                xbox:        'bg-green-100 text-green-700'
+            };
+
+            function render() {
+                var list = getWatchlist();
+                container.innerHTML = '';
+
+                if (list.length === 0) {
+                    emptyMsg.classList.remove('hidden');
+                    return;
+                }
+                emptyMsg.classList.add('hidden');
+
+                list.forEach(function (item) {
+                    var card = document.createElement('div');
+                    card.className = 'bg-white rounded-2xl shadow-lg p-6';
+
+                    var platformLabel = platformLabels[item.platform] || item.platform;
+                    var platformColor = platformColors[item.platform] || 'bg-slate-100 text-slate-700';
+                    var typeLabel     = item.type === 'movie' ? 'Film' : 'Spiel';
+                    var checkUrl      = '/watchlist/check?'
+                        + 'title='    + encodeURIComponent(item.title)
+                        + '&platform=' + encodeURIComponent(item.platform)
+                        + '&type='    + encodeURIComponent(item.type);
+
+                    card.innerHTML =
+                        '<div class="flex items-start justify-between gap-3 mb-3">'
+                        +   '<div class="flex-1 min-w-0">'
+                        +     '<p class="font-semibold text-slate-800 truncate">' + escAttr(item.title) + '</p>'
+                        +     '<div class="flex gap-2 mt-1">'
+                        +       '<span class="text-xs px-2 py-0.5 rounded-full ' + platformColor + '">' + platformLabel + '</span>'
+                        +       '<span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">' + typeLabel + '</span>'
+                        +     '</div>'
+                        +   '</div>'
+                        +   '<button class="remove-btn flex-shrink-0 text-2xl leading-none text-slate-300 hover:text-red-400 transition-colors"'
+                        +     ' data-title="' + escAttr(item.title) + '"'
+                        +     ' data-type="'  + escAttr(item.type)  + '"'
+                        +     ' title="Aus Merkliste entfernen">✕</button>'
+                        + '</div>'
+                        + '<div'
+                        +   ' hx-get="'     + escAttr(checkUrl) + '"'
+                        +   ' hx-trigger="load"'
+                        +   ' class="text-sm text-slate-500">'
+                        +   '<div class="htmx-indicator">'
+                        +     '<div class="flex items-center gap-2 text-slate-400">'
+                        +       '<div class="w-4 h-4 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin"></div>'
+                        +       '<span>Verfügbarkeit wird geprüft…</span>'
+                        +     '</div>'
+                        +   '</div>'
+                        + '</div>';
+
+                    container.appendChild(card);
+                });
+
+                // Let HTMX discover the new hx-* attributes
+                htmx.process(container);
+            }
+
+            // Event delegation for remove buttons
+            container.addEventListener('click', function (e) {
+                var btn = e.target.closest('.remove-btn');
+                if (!btn) return;
+                var title = btn.dataset.title;
+                var type  = btn.dataset.type;
+                var list  = getWatchlist().filter(function (i) {
+                    return !(i.title === title && i.type === type);
+                });
+                localStorage.setItem('watchlist', JSON.stringify(list));
+                render();
+            });
+
+            document.getElementById('clear-watchlist').addEventListener('click', function () {
+                localStorage.removeItem('watchlist');
+                render();
+            });
+
+            render();
+        });
+        </script>
+    </body>
+</html>

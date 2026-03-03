@@ -28,7 +28,17 @@
                     </div>
                     
                     <!-- Right: Status/Button -->
-                    <div class="flex-shrink-0">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <!-- Star / Watchlist Button -->
+                        <button
+                            data-watchlist-btn
+                            data-title="{{ .Title }}"
+                            data-platform="{{ .Platform }}"
+                            data-type="{{ $.MediaType }}"
+                            class="text-2xl leading-none transition-colors text-slate-300 hover:text-yellow-400"
+                            title="Zur Merkliste hinzufügen"
+                        >☆</button>
+
                         {{ if not .IsAvailable }}
                             <button 
                                 hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
@@ -37,7 +47,6 @@
                             >
                                 <img src="return.svg" class="w-6 h-6" alt="Return date">
                             </button>
-                        
                         {{ end }}
                     </div>
                 </div>
@@ -46,3 +55,43 @@
     </ul>
 </div>    
 {{ end }}
+
+<script>
+(function () {
+    function getWatchlist() {
+        try { return JSON.parse(localStorage.getItem('watchlist') || '[]'); }
+        catch (e) { return []; }
+    }
+    function saveWatchlist(list) {
+        localStorage.setItem('watchlist', JSON.stringify(list));
+    }
+    function isStarred(title, type) {
+        return getWatchlist().some(function(i) { return i.title === title && i.type === type; });
+    }
+    function updateButtons() {
+        document.querySelectorAll('[data-watchlist-btn]').forEach(function(btn) {
+            var starred = isStarred(btn.dataset.title, btn.dataset.type);
+            btn.textContent = starred ? '★' : '☆';
+            btn.classList.toggle('text-yellow-400', starred);
+            btn.classList.toggle('text-slate-300', !starred);
+        });
+    }
+    document.querySelectorAll('[data-watchlist-btn]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var title = this.dataset.title;
+            var platform = this.dataset.platform;
+            var type = this.dataset.type;
+            var list = getWatchlist();
+            var idx = list.findIndex(function(i) { return i.title === title && i.type === type; });
+            if (idx >= 0) {
+                list.splice(idx, 1);
+            } else {
+                list.push({ title: title, platform: platform, type: type });
+            }
+            saveWatchlist(list);
+            updateButtons();
+        });
+    });
+    updateButtons();
+})();
+</script>

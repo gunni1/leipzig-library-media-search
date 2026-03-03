@@ -35,6 +35,7 @@ func InitMux() *http.ServeMux {
 	mux.HandleFunc("/movies-search/", movieSearchHandler)
 	mux.HandleFunc("/games-search/", gameSearchHandler)
 	mux.HandleFunc("GET /return-date/{branchCode}/{platform}/{title}", returnDateHandler)
+	mux.HandleFunc("GET /watchlist/check", watchlistCheckHandler)
 	return mux
 }
 
@@ -87,6 +88,46 @@ func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	fmt.Fprint(respWriter, returnDate)
+}
+
+func watchlistCheckHandler(respWriter http.ResponseWriter, request *http.Request) {
+	defer trackExecTime(time.Now(), "watchlist check")
+	title := request.URL.Query().Get("title")
+	platform := request.URL.Query().Get("platform")
+	mediaType := request.URL.Query().Get("type")
+
+	client := libClient.Client{}
+	var medias []domain.Media
+	if mediaType == MOVIE {
+		medias = client.FindMovies(title)
+	} else {
+		medias = client.FindGames(title, platform)
+	}
+
+	// Filter to exact title match (library search is fuzzy)
+	titleLower := strings.ToLower(title)
+	filtered := make([]domain.Media, 0)
+	for _, m := range medias {
+		if strings.ToLower(m.Title) == titleLower {
+			filtered = append(filtered, m)
+		}
+	}
+
+	byBranch := arrangeByBranch(filtered)
+	data := MediaTemplateData{
+		Branches:  byBranch,
+		MediaType: mediaType,
+	}
+	templ, err := template.New("watchlist-check.html").Funcs(template.FuncMap{
+		"encodeBranch": encodeBranch,
+	}).ParseFS(htmlTemplates, "templates/watchlist-check.html")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if err := templ.Execute(respWriter, data); err != nil {
+		log.Println(err)
+	}
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter) {
