@@ -1,0 +1,26 @@
+{{ if .Branches }}
+<div class="space-y-1 mt-2">
+    {{ range .Branches }}
+    {{ $first := index .Media 0 }}
+    <div class="flex items-center gap-2 text-sm">
+        {{ if $first.IsAvailable }}
+            <span class="text-green-600 font-bold">✓</span>
+            <span class="text-slate-700">{{ .Branch }}</span>
+        {{ else }}
+            <span class="text-red-400">✗</span>
+            <span class="text-slate-400">{{ .Branch }}</span>
+            <button
+                hx-get="/return-date/{{ encodeBranch .Branch }}/{{ $first.Platform }}/{{ urlquery $first.Title }}"
+                hx-trigger="click"
+                hx-target="next span"
+                class="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                title="Rückgabedatum abrufen"
+            >📅</button>
+            <span class="text-xs text-slate-400"></span>
+        {{ end }}
+    </div>
+    {{ end }}
+</div>
+{{ else }}
+<p class="text-sm text-slate-400 mt-2">Kein Exemplar gefunden.</p>
+{{ end }}

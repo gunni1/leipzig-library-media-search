@@ -1,0 +1,9 @@
+<form hx-post="/watchlist/toggle" hx-target="this" hx-swap="outerHTML">
+    <input type="hidden" name="title"    value="{{ .Title }}">
+    <input type="hidden" name="platform" value="{{ .Platform }}">
+    <input type="hidden" name="type"     value="{{ .Type }}">
+    <button type="submit"
+        class="text-2xl leading-none transition-colors {{ if .Starred }}text-yellow-400{{ else }}text-slate-300 hover:text-yellow-400{{ end }}"
+        title="{{ if .Starred }}Von Merkliste entfernen{{ else }}Zur Merkliste hinzufügen{{ end }}"
+    >{{ if .Starred }}★{{ else }}☆{{ end }}</button>
+</form>

@@ -28,7 +28,17 @@
                     </div>
                     
                     <!-- Right: Status/Button -->
-                    <div class="flex-shrink-0">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <form hx-post="/watchlist/toggle" hx-target="this" hx-swap="outerHTML">
+                            <input type="hidden" name="title"    value="{{ .Title }}">
+                            <input type="hidden" name="platform" value="{{ .Platform }}">
+                            <input type="hidden" name="type"     value="{{ $.MediaType }}">
+                            <button type="submit"
+                                class="text-2xl leading-none transition-colors {{ if index $.Starred .Title }}text-yellow-400{{ else }}text-slate-300 hover:text-yellow-400{{ end }}"
+                                title="{{ if index $.Starred .Title }}Von Merkliste entfernen{{ else }}Zur Merkliste hinzufügen{{ end }}"
+                            >{{ if index $.Starred .Title }}★{{ else }}☆{{ end }}</button>
+                        </form>
+
                         {{ if not .IsAvailable }}
                             <button 
                                 hx-get="/return-date/{{encodeBranch .Branch }}/{{ .Platform }}/{{urlquery .Title }}" 
@@ -37,7 +47,6 @@
                             >
                                 <img src="return.svg" class="w-6 h-6" alt="Return date">
                             </button>
-                        
                         {{ end }}
                     </div>
                 </div>
