@@ -1,7 +1,9 @@
 package web
 
 import (
+	"crypto/rand"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"log"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/gunni1/leipzig-library-media-search/domain"
 	libClient "github.com/gunni1/leipzig-library-media-search/library-le"
+	"github.com/gunni1/leipzig-library-media-search/watchlist"
 )
 
 //go:embed templates
@@ -24,6 +27,26 @@ var staticHtml embed.FS
 
 const MOVIE string = "movie"
 const GAME string = "game"
+
+var wlStore = watchlist.NewStore()
+
+// sessionID reads the wl_session cookie, creating and setting one if absent.
+func sessionID(w http.ResponseWriter, r *http.Request) string {
+	if c, err := r.Cookie("wl_session"); err == nil && c.Value != "" {
+		return c.Value
+	}
+	b := make([]byte, 16)
+	rand.Read(b)
+	id := hex.EncodeToString(b)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "wl_session",
+		Value:    id,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	return id
+}
 
 // Create Mux and setup routes
 func InitMux() *http.ServeMux {
@@ -36,6 +59,10 @@ func InitMux() *http.ServeMux {
 	mux.HandleFunc("/games-search/", gameSearchHandler)
 	mux.HandleFunc("GET /return-date/{branchCode}/{platform}/{title}", returnDateHandler)
 	mux.HandleFunc("GET /watchlist/check", watchlistCheckHandler)
+	mux.HandleFunc("POST /watchlist/toggle", watchlistToggleHandler)
+	mux.HandleFunc("POST /watchlist/remove", watchlistRemoveHandler)
+	mux.HandleFunc("POST /watchlist/clear", watchlistClearHandler)
+	mux.HandleFunc("GET /watchlist", watchlistPageHandler)
 	return mux
 }
 
@@ -47,6 +74,7 @@ type MediaByBranch struct {
 type MediaTemplateData struct {
 	MediaType string
 	Branches  []MediaByBranch
+	Starred   map[string]bool // title -> starred for current session
 }
 
 func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -60,7 +88,7 @@ func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if !showNotAvailable {
 		games = filterAvailable(games)
 	}
-	renderMediaResults(games, domain.GAME, respWriter)
+	renderMediaResults(games, domain.GAME, respWriter, request)
 }
 
 func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -73,7 +101,7 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if !showNotAvailable {
 		movies = filterAvailable(movies)
 	}
-	renderMediaResults(movies, domain.MOVIE, respWriter)
+	renderMediaResults(movies, domain.MOVIE, respWriter, request)
 }
 
 func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -130,21 +158,76 @@ func watchlistCheckHandler(respWriter http.ResponseWriter, request *http.Request
 	}
 }
 
-func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter) {
+func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter, request *http.Request) {
 	if len(media) == 0 {
 		fmt.Fprint(respWriter, "<p>Es wurden keine Titel gefunden.</p>")
 		return
+	}
+	sid := sessionID(respWriter, request)
+	starredItems := wlStore.GetAll(sid)
+	starred := make(map[string]bool, len(starredItems))
+	for _, item := range starredItems {
+		if item.Type == mediaType {
+			starred[item.Title] = true
+		}
 	}
 	byBranch := arrangeByBranch(media)
 	data := MediaTemplateData{
 		Branches:  byBranch,
 		MediaType: mediaType,
+		Starred:   starred,
 	}
 	templ, _ := template.New("item-list-by-branch.html").Funcs(template.FuncMap{
 		"encodeBranch": encodeBranch,
 	}).ParseFS(htmlTemplates, "templates/item-list-by-branch.html")
 	err := templ.Execute(respWriter, data)
 	log.Println(err)
+}
+
+func watchlistToggleHandler(w http.ResponseWriter, r *http.Request) {
+	sid := sessionID(w, r)
+	title := r.PostFormValue("title")
+	platform := r.PostFormValue("platform")
+	mediaType := r.PostFormValue("type")
+	item := watchlist.Item{Title: title, Platform: platform, Type: mediaType}
+	starred := wlStore.Toggle(sid, item)
+	data := struct {
+		Title    string
+		Platform string
+		Type     string
+		Starred  bool
+	}{title, platform, mediaType, starred}
+	templ := template.Must(template.ParseFS(htmlTemplates, "templates/star-button.html"))
+	templ.Execute(w, data)
+}
+
+func watchlistRemoveHandler(w http.ResponseWriter, r *http.Request) {
+	sid := sessionID(w, r)
+	title := r.PostFormValue("title")
+	mediaType := r.PostFormValue("type")
+	wlStore.Remove(sid, title, mediaType)
+	// respond with empty body so HTMX deletes the element
+}
+
+func watchlistClearHandler(w http.ResponseWriter, r *http.Request) {
+	sid := sessionID(w, r)
+	wlStore.Clear(sid)
+	http.Redirect(w, r, "/watchlist", http.StatusSeeOther)
+}
+
+func watchlistPageHandler(w http.ResponseWriter, r *http.Request) {
+	sid := sessionID(w, r)
+	items := wlStore.GetAll(sid)
+	templ, err := template.New("watchlist-page.html").Funcs(template.FuncMap{
+		"encodeBranch": encodeBranch,
+	}).ParseFS(htmlTemplates, "templates/watchlist-page.html")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if err := templ.Execute(w, items); err != nil {
+		log.Println(err)
+	}
 }
 
 func encodeBranch(branchName string) int {
