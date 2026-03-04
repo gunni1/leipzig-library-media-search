@@ -23,8 +23,8 @@ validate_url() {
 echo "==> Fetching latest release info from GitHub..."
 RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest")
 LATEST_TAG=$(echo "$RELEASE_JSON" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/')
-DOWNLOAD_URL=$(echo "$RELEASE_JSON" | grep "browser_download_url" | grep "\"${BINARY_NAME}\"" | sed 's/.*"browser_download_url": *"\(.*\)".*/\1/')
-CHECKSUMS_URL=$(echo "$RELEASE_JSON" | grep "browser_download_url" | grep "\"${CHECKSUMS_NAME}\"" | sed 's/.*"browser_download_url": *"\(.*\)".*/\1/')
+DOWNLOAD_URL=$(echo "$RELEASE_JSON" | grep "browser_download_url" | grep "/${BINARY_NAME}\"" | sed 's/.*"browser_download_url": *"\(.*\)".*/\1/')
+CHECKSUMS_URL=$(echo "$RELEASE_JSON" | grep "browser_download_url" | grep "/${CHECKSUMS_NAME}\"" | sed 's/.*"browser_download_url": *"\(.*\)".*/\1/')
 
 if [ -z "$LATEST_TAG" ] || [ -z "$DOWNLOAD_URL" ] || [ -z "$CHECKSUMS_URL" ]; then
   echo "ERROR: Could not determine latest release tag or download URLs." >&2
@@ -117,8 +117,8 @@ fi
 
 echo "lib-update: new version \${LATEST_TAG} (current: \${CURRENT_TAG}), updating..."
 
-DOWNLOAD_URL=\$(echo "\$RELEASE_JSON" | grep "browser_download_url" | grep '"\${BINARY_NAME}"' | sed 's/.*"browser_download_url": *"\\(.*\\)".*/\\1/')
-CHECKSUMS_URL=\$(echo "\$RELEASE_JSON" | grep "browser_download_url" | grep '"\${CHECKSUMS_NAME}"' | sed 's/.*"browser_download_url": *"\\(.*\\)".*/\\1/')
+DOWNLOAD_URL=\$(echo "\$RELEASE_JSON" | grep "browser_download_url" | grep "/\${BINARY_NAME}\"" | sed 's/.*"browser_download_url": *"\\(.*\\)".*/\\1/')
+CHECKSUMS_URL=\$(echo "\$RELEASE_JSON" | grep "browser_download_url" | grep "/\${CHECKSUMS_NAME}\"" | sed 's/.*"browser_download_url": *"\\(.*\\)".*/\\1/')
 
 if [ -z "\$DOWNLOAD_URL" ] || [ -z "\$CHECKSUMS_URL" ]; then
   echo "lib-update: could not find download URLs in release \${LATEST_TAG}." >&2
