@@ -5,11 +5,11 @@ build-web:
 
 build-amd64:
 	go build ./...
-	GOOS=linux GOARCH=amd64 go build -o bin/web main.go
+	GOOS=linux GOARCH=amd64 go build -o bin/llms-amd64-linux main.go
 
-build-arm:
+build-arm-linux:
 	go build ./...
-	GOOS=linux GOARCH=arm go build -o bin/web main.go
+	GOOS=linux GOARCH=arm go build -o bin/llms-arm-linux main.go
 
 build-cli:
 	go build ./...
