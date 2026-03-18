@@ -44,6 +44,7 @@ func sessionID(w http.ResponseWriter, r *http.Request) string {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   60 * 60 * 24 * 365, // 1 year
 	})
 	return id
 }
