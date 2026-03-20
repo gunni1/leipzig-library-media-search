@@ -28,7 +28,7 @@ var staticHtml embed.FS
 const MOVIE string = "movie"
 const GAME string = "game"
 
-var wlStore = watchlist.NewStore()
+var wlStore *watchlist.FileStore
 
 // sessionID reads the wl_session cookie, creating and setting one if absent.
 func sessionID(w http.ResponseWriter, r *http.Request) string {
@@ -50,7 +50,8 @@ func sessionID(w http.ResponseWriter, r *http.Request) string {
 }
 
 // Create Mux and setup routes
-func InitMux() *http.ServeMux {
+func InitMux(store *watchlist.FileStore) *http.ServeMux {
+	wlStore = store
 	mux := http.NewServeMux()
 	fileSys, _ := fs.Sub(staticHtml, "static")
 

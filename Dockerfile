@@ -16,6 +16,6 @@ RUN make build-web
 FROM gcr.io/distroless/base-debian11
 WORKDIR /
 COPY --from=build /app/bin/web /web
-EXPOSE 8080
+EXPOSE 3000
 USER nonroot:nonroot
 ENTRYPOINT ["/web"]
