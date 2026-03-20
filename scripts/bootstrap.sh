@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# --------------------------------------------
+# This is AI generated code. Please review carefully before running, especially since this script runs with sudo privileges and performs network operations.
+# --------------------------------------------
 # bootstrap.sh — One-shot setup for a fresh EC2 instance (ARM64 / Amazon Linux 2 or Ubuntu)
 # Usage: curl -fsSL https://raw.githubusercontent.com/gunni1/leipzig-library-media-search/main/scripts/bootstrap.sh | sudo bash
 

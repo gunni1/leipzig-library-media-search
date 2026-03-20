@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -38,15 +39,19 @@ func sessionID(w http.ResponseWriter, r *http.Request) string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	id := hex.EncodeToString(b)
+	setCookie(w, id)
+	return id
+}
+
+func setCookie(w http.ResponseWriter, value string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "wl_session",
-		Value:    id,
+		Value:    value,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   60 * 60 * 24 * 365, // 1 year
 	})
-	return id
 }
 
 // Create Mux and setup routes
@@ -65,6 +70,8 @@ func InitMux(store *watchlist.FileStore) *http.ServeMux {
 	mux.HandleFunc("POST /watchlist/remove", watchlistRemoveHandler)
 	mux.HandleFunc("POST /watchlist/clear", watchlistClearHandler)
 	mux.HandleFunc("GET /watchlist", watchlistPageHandler)
+	mux.HandleFunc("GET /watchlist/share", watchlistShareHandler)
+	mux.HandleFunc("GET /watchlist/join", watchlistJoinHandler)
 	return mux
 }
 
@@ -230,6 +237,44 @@ func watchlistPageHandler(w http.ResponseWriter, r *http.Request) {
 	if err := templ.Execute(w, items); err != nil {
 		log.Println(err)
 	}
+}
+
+func watchlistShareHandler(w http.ResponseWriter, r *http.Request) {
+	sid := sessionID(w, r)
+	scheme := extractScheme(r)
+	joinURL := fmt.Sprintf("%s://%s/watchlist/join?token=%s", scheme, r.Host, sid)
+	templ, err := template.ParseFS(htmlTemplates, "templates/watchlist-share.html")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "template error", http.StatusInternalServerError)
+		return
+	}
+	if err := templ.Execute(w, joinURL); err != nil {
+		log.Println(err)
+	}
+}
+
+func extractScheme(r *http.Request) string {
+	if r.TLS != nil {
+		return "https"
+	}
+	return "http"
+}
+
+func watchlistJoinHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	if !isValidJoinToken(token) {
+		http.Error(w, "Invalid join token", http.StatusBadRequest)
+		return
+	}
+	setCookie(w, token)
+	http.Redirect(w, r, "/watchlist", http.StatusSeeOther)
+}
+
+// Join token should be a 32 character hex string (session ID)
+func isValidJoinToken(token string) bool {
+	tokenRE := regexp.MustCompile("^[a-fA-F0-9]{32}$")
+	return tokenRE.MatchString(token)
 }
 
 func encodeBranch(branchName string) int {
