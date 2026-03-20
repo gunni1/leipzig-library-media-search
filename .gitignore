@@ -3,3 +3,5 @@ bin/*
 
 web/static/tailwind.config.js
 .DS_Store
+
+data/*

@@ -67,8 +67,14 @@
                 {{ end }}
             </ul>
 
-            <!-- Clear all -->
-            <div class="mt-6 text-center">
+            <!-- Actions: share + clear all -->
+            <div class="mt-6 text-center flex justify-center gap-3">
+                <button hx-get="/watchlist/share"
+                        hx-target="#share-panel"
+                        hx-swap="innerHTML"
+                        class="px-5 py-2 text-sm text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors">
+                    Merkliste teilen
+                </button>
                 <form method="POST" action="/watchlist/clear"
                       onsubmit="return confirm('Alle Einträge löschen?')">
                     <button type="submit"
@@ -77,6 +83,7 @@
                     </button>
                 </form>
             </div>
+            <div id="share-panel" class="mt-4"></div>
             {{ end }}
 
         </div>
