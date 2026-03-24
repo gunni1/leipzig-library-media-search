@@ -115,7 +115,11 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
 	defer trackExecTime(time.Now(), "return date")
-	branchCode, _ := strconv.Atoi(request.PathValue("branchCode"))
+	branchCode, branchErr := strconv.Atoi(request.PathValue("branchCode"))
+	if branchErr != nil {
+		http.Error(respWriter, "invalid branch code", http.StatusBadRequest)
+		return
+	}
 	platform := request.PathValue("platform")
 	title, _ := url.QueryUnescape(request.PathValue("title"))
 	client := libClient.NewClientWithSession()
@@ -186,11 +190,17 @@ func renderMediaResults(media []domain.Media, mediaType string, respWriter http.
 		MediaType: mediaType,
 		Starred:   starred,
 	}
-	templ, _ := template.New("item-list-by-branch.html").Funcs(template.FuncMap{
+	templ, err := template.New("item-list-by-branch.html").Funcs(template.FuncMap{
 		"encodeBranch": encodeBranch,
 	}).ParseFS(htmlTemplates, "templates/item-list-by-branch.html")
-	err := templ.Execute(respWriter, data)
-	log.Println(err)
+	if err != nil {
+		log.Printf("template parse error: %v", err)
+		http.Error(respWriter, "template error", http.StatusInternalServerError)
+		return
+	}
+	if err := templ.Execute(respWriter, data); err != nil {
+		log.Printf("template execute error: %v", err)
+	}
 }
 
 func watchlistToggleHandler(w http.ResponseWriter, r *http.Request) {

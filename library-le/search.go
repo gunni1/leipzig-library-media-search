@@ -141,13 +141,11 @@ func (result searchResult) loadReturnDate(libSession webOpacSession) (string, er
 	httpClient := http.Client{}
 	mediaResponse, err := httpClient.Do(request)
 	if err != nil {
-		log.Printf("Error during search: %s", err.Error())
-		return "", nil
+		return "", fmt.Errorf("http request failed for %s: %w", result.title, err)
 	}
 	doc, docErr := goquery.NewDocumentFromReader(mediaResponse.Body)
 	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return "", docErr
+		return "", fmt.Errorf("could not parse response for %s: %w", result.title, docErr)
 	}
 	return findReturnDateInCopiesPage(doc)
 }
@@ -160,7 +158,7 @@ func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (stri
 		if err == nil {
 			return returnDate, nil
 		}
-		log.Printf("No return date found for title %s ", title.title)
+		log.Printf("No return date found for title %s: %w", title.title, err)
 	}
 	return "", errors.New("No return date found")
 }
