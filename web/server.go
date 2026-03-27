@@ -26,9 +26,6 @@ var htmlTemplates embed.FS
 //go:embed static/*
 var staticHtml embed.FS
 
-const MOVIE string = "movie"
-const GAME string = "game"
-
 var wlStore *watchlist.FileStore
 
 // sessionID reads the wl_session cookie, creating and setting one if absent.
@@ -139,7 +136,7 @@ func watchlistCheckHandler(respWriter http.ResponseWriter, request *http.Request
 
 	client := libClient.Client{}
 	var medias []domain.Media
-	if mediaType == MOVIE {
+	if mediaType == domain.MOVIE {
 		medias = client.FindMovies(title)
 	} else {
 		medias = client.FindGames(title, platform)

@@ -158,7 +158,7 @@ func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (stri
 		if err == nil {
 			return returnDate, nil
 		}
-		log.Printf("No return date found for title %s: %w", title.title, err)
+		log.Printf("No return date found for title %s: %v", title.title, err)
 	}
 	return "", errors.New("No return date found")
 }

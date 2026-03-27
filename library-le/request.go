@@ -2,6 +2,7 @@ package libraryle
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -48,7 +49,7 @@ func NewGameSearchRequest(title string, platform string, branchCode int, libSess
 	return request
 }
 
-func createGameSearchQuery(request http.Request, title string, platform string, branchCode int, userSessionId string) string {
+func createBaseSearchQuery(request http.Request, userSessionId string, branchCode int) url.Values {
 	query := request.URL.Query()
 	query.Add("methodToCall", "submit")
 	query.Add("methodToCallParameter", "submitSearch")
@@ -59,6 +60,11 @@ func createGameSearchQuery(request http.Request, title string, platform string, 
 	query.Add("CSId", userSessionId)
 	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
 	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	return query
+}
+
+func createGameSearchQuery(request http.Request, title string, platform string, branchCode int, userSessionId string) string {
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search for category title
 	query.Add("searchString[0]", title)
 	query.Add("searchCategories[0]", "331")
@@ -72,16 +78,7 @@ func createGameSearchQuery(request http.Request, title string, platform string, 
 }
 
 func createSinglePlatformMovieSearchQuery(request http.Request, title string, platform string, branchCode int, userSessionId string) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search for category title
 	query.Add("searchString[0]", title)
 	query.Add("searchCategories[0]", "331")
@@ -95,19 +92,9 @@ func createSinglePlatformMovieSearchQuery(request http.Request, title string, pl
 }
 
 func createMovieSearchQuery(request http.Request, title string, branchCode int, userSessionId string) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("searchString[0]", title)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search for category title
+	query.Add("searchString[0]", title)
 	query.Add("searchCategories[0]", "331")
 	//Restrict search to dvd/bluray
 	query.Add("searchRestrictionID[2]", "3")
@@ -116,16 +103,7 @@ func createMovieSearchQuery(request http.Request, title string, branchCode int, 
 }
 
 func createGameIndexQuery(request http.Request, platform string, userSessionId string, branchCode int) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search the platform as a keyword (schlagwort)
 	query.Add("searchString[0]", platform)
 	query.Add("searchCategories[0]", "902")
