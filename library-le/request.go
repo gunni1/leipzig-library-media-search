@@ -2,7 +2,20 @@ package libraryle
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
+)
+
+const (
+	// WebOPAC search category codes
+	searchCategoryTitle    = "331" // Suche nach Titel
+	searchCategoryKeyword  = "902" // Suche nach Schlagwort
+	searchCategoryPlatform = "800" // Suche nach Medienart/Platform
+
+	// WebOPAC media type restriction codes (used with searchRestrictionID = "3")
+	restrictionTypeMedium       = "3"
+	restrictionValueDVDorBluray = "29" // DVD or Blu-ray
+	restrictionValueGame        = "27" // Computerspiel
 )
 
 func createRequest(libSession webOpacSession, path string) *http.Request {
@@ -48,7 +61,7 @@ func NewGameSearchRequest(title string, platform string, branchCode int, libSess
 	return request
 }
 
-func createGameSearchQuery(request http.Request, title string, platform string, branchCode int, userSessionId string) string {
+func createBaseSearchQuery(request http.Request, userSessionId string, branchCode int) url.Values {
 	query := request.URL.Query()
 	query.Add("methodToCall", "submit")
 	query.Add("methodToCallParameter", "submitSearch")
@@ -59,76 +72,53 @@ func createGameSearchQuery(request http.Request, title string, platform string, 
 	query.Add("CSId", userSessionId)
 	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
 	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	return query
+}
+
+func createGameSearchQuery(request http.Request, title string, gamePlatform string, branchCode int, userSessionId string) string {
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search for category title
 	query.Add("searchString[0]", title)
-	query.Add("searchCategories[0]", "331")
+	query.Add("searchCategories[0]", searchCategoryTitle)
 	//Search for category schlagwort
-	query.Add("searchString[1]", platform)
-	query.Add("searchCategories[1]", "902")
+	query.Add("searchString[1]", gamePlatform)
+	query.Add("searchCategories[1]", searchCategoryKeyword)
 	//Restrict search to games
-	query.Add("searchRestrictionID[2]", "3")
-	query.Add("searchRestrictionValue1[2]", "27")
+	query.Add("searchRestrictionID[2]", restrictionTypeMedium)
+	query.Add("searchRestrictionValue1[2]", restrictionValueGame)
 	return query.Encode()
 }
 
 func createSinglePlatformMovieSearchQuery(request http.Request, title string, platform string, branchCode int, userSessionId string) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search for category title
 	query.Add("searchString[0]", title)
-	query.Add("searchCategories[0]", "331")
+	query.Add("searchCategories[0]", searchCategoryTitle)
 	//Search for one specific mediatype dvd or bluray
 	query.Add("searchString[1]", platform)
-	query.Add("searchCategories[1]", "800")
+	query.Add("searchCategories[1]", searchCategoryPlatform)
 	//Restrict search to dvd/bluray
-	query.Add("searchRestrictionID[2]", "3")
-	query.Add("searchRestrictionValue1[2]", "29")
+	query.Add("searchRestrictionID[2]", restrictionTypeMedium)
+	query.Add("searchRestrictionValue1[2]", restrictionValueDVDorBluray)
 	return query.Encode()
 }
 
 func createMovieSearchQuery(request http.Request, title string, branchCode int, userSessionId string) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("searchString[0]", title)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search for category title
-	query.Add("searchCategories[0]", "331")
+	query.Add("searchString[0]", title)
+	query.Add("searchCategories[0]", searchCategoryTitle)
 	//Restrict search to dvd/bluray
-	query.Add("searchRestrictionID[2]", "3")
-	query.Add("searchRestrictionValue1[2]", "29")
+	query.Add("searchRestrictionID[2]", restrictionTypeMedium)
+	query.Add("searchRestrictionValue1[2]", restrictionValueDVDorBluray)
 	return query.Encode()
 }
 
-func createGameIndexQuery(request http.Request, platform string, userSessionId string, branchCode int) string {
-	query := request.URL.Query()
-	query.Add("methodToCall", "submit")
-	query.Add("methodToCallParameter", "submitSearch")
-	query.Add("submitSearch", "Suchen")
-	query.Add("callingPage", "searchPreferences")
-	query.Add("numberOfHits", "500")
-	query.Add("timeOut", "20")
-	query.Add("CSId", userSessionId)
-	query.Add("selectedSearchBranchlib", strconv.FormatInt(int64(branchCode), 10))
-	query.Add("selectedViewBranchlib", strconv.FormatInt(int64(branchCode), 10))
+func createGameIndexQuery(request http.Request, gamePlatform string, userSessionId string, branchCode int) string {
+	query := createBaseSearchQuery(request, userSessionId, branchCode)
 	//Search the platform as a keyword (schlagwort)
-	query.Add("searchString[0]", platform)
-	query.Add("searchCategories[0]", "902")
+	query.Add("searchString[0]", gamePlatform)
+	query.Add("searchCategories[0]", searchCategoryKeyword)
 
 	return query.Encode()
 }

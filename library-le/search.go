@@ -18,6 +18,12 @@ const (
 	keyWordsSelector string = "div.results-teaser > div > div > ul > li:nth-child(5)" //Schlagwort
 )
 
+var (
+	dateRx          = regexp.MustCompile(`\d{2}\.\d{2}\.\d{4}`)
+	platformsRx     = regexp.MustCompile(`playstation|x-box|switch`)
+	titleBracketsRx = regexp.MustCompile(`\[.*?\]`)
+)
+
 type searchResult struct {
 	title     string
 	resultUrl string
@@ -135,13 +141,11 @@ func (result searchResult) loadReturnDate(libSession webOpacSession) (string, er
 	httpClient := http.Client{}
 	mediaResponse, err := httpClient.Do(request)
 	if err != nil {
-		log.Printf("Error during search: %s", err.Error())
-		return "", nil
+		return "", fmt.Errorf("http request failed for %s: %w", result.title, err)
 	}
 	doc, docErr := goquery.NewDocumentFromReader(mediaResponse.Body)
 	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return "", docErr
+		return "", fmt.Errorf("could not parse response for %s: %w", result.title, docErr)
 	}
 	return findReturnDateInCopiesPage(doc)
 }
@@ -154,7 +158,7 @@ func loadMediaReturnDate(titles []searchResult, libSession webOpacSession) (stri
 		if err == nil {
 			return returnDate, nil
 		}
-		log.Printf("No return date found for title %s ", title.title)
+		log.Printf("No return date found for title %s: %v", title.title, err)
 	}
 	return "", errors.New("No return date found")
 }
@@ -178,8 +182,7 @@ func findReturnDateInCopiesPage(doc *goquery.Document) (string, error) {
 
 // find a date string inside a string. Format DD.MM.YYYY
 func extractDate(text string) (string, error) {
-	dateForm := regexp.MustCompile(`\d{2}\.\d{2}\.\d{4}`)
-	date := dateForm.FindString(text)
+	date := dateRx.FindString(text)
 	if date == "" {
 		return "", fmt.Errorf("no date found in: %s", text)
 	}
@@ -228,8 +231,7 @@ func parseMediaCopiesPage(title string, doc *goquery.Document) []domain.Media {
 // decide on a media platform
 func determinePlatform(doc *goquery.Document) string {
 	keyWords := strings.ToLower(doc.Find(keyWordsSelector).Text())
-	plaformsRx := regexp.MustCompile("playstation|x-box|switch")
-	if plaformsRx.MatchString(keyWords) {
+	if platformsRx.MatchString(keyWords) {
 		if strings.Contains(keyWords, "playstation") {
 			return "playstation"
 		} else if strings.Contains(keyWords, "x-box") {
@@ -255,8 +257,7 @@ func removeBranchSuffix(branchName string) string {
 
 // Remove additional media information from titles in square brackets
 func clearTitle(title string) string {
-	brackets := regexp.MustCompile(`\[.*\]`)
-	return strings.TrimSpace(brackets.ReplaceAllString(title, ""))
+	return strings.TrimSpace(titleBracketsRx.ReplaceAllString(title, ""))
 }
 
 func isMediaAvailable(copy *goquery.Selection) bool {

@@ -33,7 +33,7 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 
 	games, parseResultErr := parseGameSearchResult(response.Body)
 	if parseResultErr != nil {
-		log.Fatalln(parseResultErr)
+		log.Printf("parse error during game index search: %v", parseResultErr)
 		return nil
 	}
 	return games
@@ -58,5 +58,5 @@ func parseGameSearchResult(searchResult io.Reader) ([]domain.Game, error) {
 }
 
 func isGameAvailable(searchHitNode *goquery.Selection) bool {
-	return len(searchHitNode.Find(availabilitySelector).Nodes) > 0
+	return searchHitNode.Find(availabilitySelector).Length() > 0
 }
