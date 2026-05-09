@@ -1,8 +1,7 @@
 # Stage Build
-FROM golang:1.23 as build
+FROM golang:1.24 AS build
 
 ENV GOOS=linux
-ENV GOARCH=amd64
 ENV CGO_ENABLED=0
 
 WORKDIR /app
@@ -10,12 +9,15 @@ WORKDIR /app
 COPY . ./
 RUN go mod download
 
-RUN make build-web
+RUN go build -o bin/web main.go && mkdir -p data
 
 # Stage Run
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/static-debian13
 WORKDIR /
 COPY --from=build /app/bin/web /web
+# Create writable data directory owned by nonroot (UID/GID 65532)
+COPY --from=build --chown=65532:65532 /app/data/ /data/
+VOLUME /data
 EXPOSE 3000
 USER nonroot:nonroot
-ENTRYPOINT ["/web"]
+ENTRYPOINT ["/web", "-data-dir", "/data"]

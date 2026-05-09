@@ -2,6 +2,7 @@ package watchlist
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -70,12 +71,16 @@ func (fst *FileStore) Toggle(sessionID string, item Item) bool {
 	for idx, existing := range list {
 		if existing.Title == item.Title && existing.Type == item.Type {
 			list = append(list[:idx], list[idx+1:]...)
-			fst.writeItems(sessionID, list)
+			if err := fst.writeItems(sessionID, list); err != nil {
+				log.Printf("watchlist: failed to write session %s: %v", sessionID, err)
+			}
 			return false
 		}
 	}
 	list = append(list, item)
-	fst.writeItems(sessionID, list)
+	if err := fst.writeItems(sessionID, list); err != nil {
+		log.Printf("watchlist: failed to write session %s: %v", sessionID, err)
+	}
 	return true
 }
 
@@ -87,7 +92,9 @@ func (fst *FileStore) Remove(sessionID, title, itemType string) {
 	for idx, existing := range list {
 		if existing.Title == title && existing.Type == itemType {
 			list = append(list[:idx], list[idx+1:]...)
-			fst.writeItems(sessionID, list)
+			if err := fst.writeItems(sessionID, list); err != nil {
+				log.Printf("watchlist: failed to write session %s: %v", sessionID, err)
+			}
 			return
 		}
 	}
@@ -97,5 +104,7 @@ func (fst *FileStore) Remove(sessionID, title, itemType string) {
 func (fst *FileStore) Clear(sessionID string) {
 	fst.mu.Lock()
 	defer fst.mu.Unlock()
-	os.Remove(fst.filePath(sessionID))
+	if err := os.Remove(fst.filePath(sessionID)); err != nil && !os.IsNotExist(err) {
+		log.Printf("watchlist: failed to clear session %s: %v", sessionID, err)
+	}
 }
