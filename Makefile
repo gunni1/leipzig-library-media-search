@@ -17,7 +17,5 @@ build-cli:
 	go build -o bin/cli cmd/cli/main.go
 
 docker-build:
-	docker build -t gunni1/lib-api:local .
-
-docker-run:
-	docker run -p 8080:8080 --rm --name lib-api gunni1/lib-api:local
+	docker build -t gunni1/leipzig-library-media-search:latest .
+	docker push gunni1/leipzig-library-media-search:latest
