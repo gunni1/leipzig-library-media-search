@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-media-search/domain"
@@ -23,7 +22,6 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 		return nil
 	}
 	request := NewGameIndexRequest(branchCode, platform, libClient.session)
-	httpClient := http.Client{}
 	response, err := httpClient.Do(request)
 	if err != nil {
 		log.Println("error during search")

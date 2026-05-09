@@ -1,13 +1,24 @@
 package libraryle
 
 import (
+	"crypto/tls"
 	"errors"
 	"net/http"
+	"time"
 )
 
 const (
 	LIB_BASE_URL = "https://bibliothekskatalog.leipzig.de"
 )
+
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+	Transport: &http.Transport{
+		TLSHandshakeTimeout:   15 * time.Second,
+		ResponseHeaderTimeout: 20 * time.Second,
+		TLSClientConfig:       &tls.Config{MinVersion: tls.VersionTLS12},
+	},
+}
 
 type Client struct {
 	session webOpacSession
@@ -25,7 +36,7 @@ func NewClientWithSession() Client {
 }
 
 func (client *Client) newSession() error {
-	resp, err := http.Get(LIB_BASE_URL + "/webOPACClient")
+	resp, err := httpClient.Get(LIB_BASE_URL + "/webOPACClient")
 	if err != nil {
 		return err
 	}

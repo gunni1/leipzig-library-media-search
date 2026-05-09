@@ -3,7 +3,6 @@ package libraryle
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"regexp"
 	"strings"
 
@@ -37,7 +36,6 @@ func (libClient Client) FindMovies(title string) []domain.Media {
 		return nil
 	}
 	searchRequest := NewMovieSearchRequest(title, 0, libClient.session)
-	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(searchRequest)
 	if err != nil {
 		log.Println(err)
@@ -67,7 +65,6 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 		return nil
 	}
 	searchRequest := NewGameSearchRequest(title, platform, 0, libClient.session)
-	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(searchRequest)
 	if err != nil {
 		log.Println(err)
@@ -91,7 +88,6 @@ func (libClient Client) FindGames(title string, platform string) []domain.Media 
 
 func (libClient Client) RetrieveReturnDate(branchCode int, platform string, title string) (string, error) {
 	request := NewReturnDateRequest(title, platform, branchCode, libClient.session)
-	httpClient := http.Client{}
 	searchResponse, err := httpClient.Do(request)
 	if err != nil {
 		log.Printf("Error during search: %s", err.Error())
@@ -121,7 +117,6 @@ func isSingleResultPage(doc *goquery.Document) bool {
 func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.Media {
 	request := createRequest(libSession, result.resultUrl)
 
-	httpClient := http.Client{}
 	mediaResponse, err := httpClient.Do(request)
 	if err != nil {
 		log.Printf("Error during search: %s", err.Error())
@@ -138,7 +133,6 @@ func (result searchResult) loadMediaCopies(libSession webOpacSession) []domain.M
 // load the return date for a searched title. Return the date of the first copy found.
 func (result searchResult) loadReturnDate(libSession webOpacSession) (string, error) {
 	request := createRequest(libSession, result.resultUrl)
-	httpClient := http.Client{}
 	mediaResponse, err := httpClient.Do(request)
 	if err != nil {
 		return "", fmt.Errorf("http request failed for %s: %w", result.title, err)
