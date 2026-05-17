@@ -7,7 +7,7 @@ import (
 
 // NewNotifierMux creates the HTTP mux for the notifier service.
 // scheduler is accepted for future use; handlers do not call it directly.
-func NewNotifierMux(store *SubscriptionStore, scheduler interface{}) *http.ServeMux {
+func NewNotifierMux(store *SubscriptionStore, scheduler *Scheduler) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /subscriptions", makeSubscribeHandler(store))
 	mux.HandleFunc("DELETE /subscriptions/{id}", makeDeleteHandler(store))
