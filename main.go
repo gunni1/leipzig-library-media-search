@@ -13,6 +13,7 @@ import (
 func main() {
 	port := flag.Int("port", 3000, "Webserver Port")
 	dataDir := flag.String("data-dir", "data", "Directory for watchlist persistence")
+	notifierURL := flag.String("notifier-url", "", "Base URL of the notifier service (optional)")
 	flag.Parse()
 
 	store, err := watchlist.NewFileStore(*dataDir)
@@ -21,6 +22,6 @@ func main() {
 	}
 
 	fmt.Printf("listening on port: %d \n", *port)
-	mux := web.InitMux(store)
+	mux := web.InitMux(store, *notifierURL)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), mux))
 }

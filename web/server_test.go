@@ -1,9 +1,13 @@
 package web
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gunni1/leipzig-library-media-search/domain"
+	"github.com/gunni1/leipzig-library-media-search/watchlist"
 	. "github.com/stretchr/testify/assert"
 )
 
@@ -29,4 +33,29 @@ func TestEncodeBranchName(t *testing.T) {
 	Equal(t, 20, encodeBranch("Bibliothek Plagwitz"))
 	Equal(t, 0, encodeBranch("Stadtbibliothek"))
 	Equal(t, 41, encodeBranch("Bibliothek Gohlis"))
+}
+
+func TestAvailabilityHandler_returnsBadRequestWithoutTitle(t *testing.T) {
+	store, _ := watchlist.NewFileStore(t.TempDir())
+	mux := InitMux(store, "")
+	req := httptest.NewRequest("GET", "/api/availability?type=movie", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestAvailabilityHandler_returnsJSON(t *testing.T) {
+	store, _ := watchlist.NewFileStore(t.TempDir())
+	mux := InitMux(store, "")
+	req := httptest.NewRequest("GET", "/api/availability?title=Dune&type=movie", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	// The library scrape will return empty for a test title — we just verify JSON shape.
+	Equal(t, http.StatusOK, rec.Code)
+	Equal(t, "application/json", rec.Header().Get("Content-Type"))
+	var body map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &body)
+	Nil(t, err)
+	_, hasAvailable := body["available"]
+	True(t, hasAvailable)
 }
