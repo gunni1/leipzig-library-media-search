@@ -83,3 +83,22 @@ func TestSubscribeHandler_returnsBadRequestWithoutEmail(t *testing.T) {
 	mux.ServeHTTP(rec, req)
 	Equal(t, http.StatusBadRequest, rec.Code)
 }
+
+func TestNotifyFormHandler_returnsServiceUnavailableWhenNotifierNotConfigured(t *testing.T) {
+	store, _ := watchlist.NewFileStore(t.TempDir())
+	mux := InitMux(store, "")
+	req := httptest.NewRequest("GET", "/watchlist/notify-form?title=Dune&type=movie", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	Equal(t, http.StatusServiceUnavailable, rec.Code)
+}
+
+func TestNotifyFormHandler_returnsFormWhenNotifierConfigured(t *testing.T) {
+	store, _ := watchlist.NewFileStore(t.TempDir())
+	mux := InitMux(store, "http://notifier")
+	req := httptest.NewRequest("GET", "/watchlist/notify-form?title=Dune&type=movie", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	Equal(t, http.StatusOK, rec.Code)
+	Contains(t, rec.Body.String(), "email")
+}

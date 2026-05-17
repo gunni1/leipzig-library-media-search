@@ -63,6 +63,15 @@
                             <span>Verfügbarkeit wird geprüft…</span>
                         </div>
                     </div>
+                    <!-- Notify-me button (expands inline form via HTMX) -->
+                    <div id="notify-{{ urlquery .Title }}" class="mt-2">
+                        <button hx-get="/watchlist/notify-form?title={{ urlquery .Title }}&type={{ .Type }}&platform={{ urlquery .Platform }}"
+                                hx-target="#notify-{{ urlquery .Title }}"
+                                hx-swap="innerHTML"
+                                class="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 rounded-lg px-2 py-1 transition-colors">
+                            🔔 Benachrichtigung einrichten
+                        </button>
+                    </div>
                 </li>
                 {{ end }}
             </ul>
