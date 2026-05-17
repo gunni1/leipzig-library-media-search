@@ -30,6 +30,7 @@ func NewScheduler(store *SubscriptionStore, checker Checker, sender Sender) *Sch
 // RunOnce checks all subscriptions once: notify and delete those whose item is available.
 func (scheduler *Scheduler) RunOnce() error {
 	subs, err := scheduler.store.GetAll()
+	log.Printf("checking %d for subscriptions to notify...\n", len(subs))
 	if err != nil {
 		return err
 	}

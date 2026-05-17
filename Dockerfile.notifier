@@ -1,5 +1,5 @@
 # Stage Build
-FROM golang:1.24 AS build
+FROM golang:1.26 AS build
 
 ENV GOOS=linux
 ENV CGO_ENABLED=0
