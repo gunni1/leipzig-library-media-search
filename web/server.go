@@ -228,7 +228,38 @@ func availabilityHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func watchlistSubscribeHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
+	if notifierBaseURL == "" {
+		http.Error(w, "notification service not configured", http.StatusServiceUnavailable)
+		return
+	}
+	title := r.PostFormValue("title")
+	platform := r.PostFormValue("platform")
+	mediaType := r.PostFormValue("type")
+	email := r.PostFormValue("email")
+	if title == "" || email == "" || mediaType == "" {
+		http.Error(w, "title, type and email are required", http.StatusBadRequest)
+		return
+	}
+
+	payload := url.Values{}
+	payload.Set("title", title)
+	payload.Set("platform", platform)
+	payload.Set("type", mediaType)
+	payload.Set("email", email)
+
+	resp, err := http.PostForm(notifierBaseURL+"/subscriptions", payload)
+	if err != nil {
+		log.Printf("notifier unreachable: %v", err)
+		http.Error(w, "could not reach notification service", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		http.Error(w, "notification service rejected request", resp.StatusCode)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, `<p class="text-sm text-green-600 mt-2">Benachrichtigung eingerichtet ✓</p>`)
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter, request *http.Request) {

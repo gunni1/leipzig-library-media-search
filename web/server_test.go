@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gunni1/leipzig-library-media-search/domain"
@@ -58,4 +59,27 @@ func TestAvailabilityHandler_returnsJSON(t *testing.T) {
 	Nil(t, err)
 	_, hasAvailable := body["available"]
 	True(t, hasAvailable)
+}
+
+func TestSubscribeHandler_returnsServiceUnavailableWhenNotifierNotConfigured(t *testing.T) {
+	store, _ := watchlist.NewFileStore(t.TempDir())
+	mux := InitMux(store, "") // no notifier URL
+	body := strings.NewReader("title=Dune&type=movie&email=test@example.com")
+	req := httptest.NewRequest("POST", "/watchlist/subscribe", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	Equal(t, http.StatusServiceUnavailable, rec.Code)
+}
+
+func TestSubscribeHandler_returnsBadRequestWithoutEmail(t *testing.T) {
+	store, _ := watchlist.NewFileStore(t.TempDir())
+	// Use a fake notifier URL so the handler proceeds past the config check
+	mux := InitMux(store, "http://notifier-does-not-exist")
+	body := strings.NewReader("title=Dune&type=movie")
+	req := httptest.NewRequest("POST", "/watchlist/subscribe", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	Equal(t, http.StatusBadRequest, rec.Code)
 }
