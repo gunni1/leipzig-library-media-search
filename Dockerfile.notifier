@@ -1,0 +1,20 @@
+# Stage Build
+FROM golang:1.24 AS build
+
+ENV GOOS=linux
+ENV CGO_ENABLED=0
+
+WORKDIR /app
+COPY . ./
+RUN go mod download
+RUN go build -o bin/notifier cmd/notifier/main.go && mkdir -p data/notifier
+
+# Stage Run
+FROM gcr.io/distroless/static-debian13
+WORKDIR /
+COPY --from=build /app/bin/notifier /notifier
+COPY --from=build --chown=65532:65532 /app/data/notifier/ /data/
+VOLUME /data
+EXPOSE 8081
+USER nonroot:nonroot
+ENTRYPOINT ["/notifier"]

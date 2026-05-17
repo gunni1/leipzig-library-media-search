@@ -19,3 +19,7 @@ build-cli:
 docker-build:
 	docker build -t gunni1/leipzig-library-media-search:latest .
 	docker push gunni1/leipzig-library-media-search:latest
+
+build-notifier:
+	go build ./...
+	go build -o bin/notifier cmd/notifier/main.go
