@@ -216,6 +216,7 @@ func parseMediaCopiesPage(title string, doc *goquery.Document) []domain.Media {
 	}
 	doc.Find(copiesSelector).Each(func(i int, copy *goquery.Selection) {
 		branch := copy.Find("div.col-12.col-md-4.my-md-2 > b").Text()
+		title := strings.TrimSpace(doc.Find("#middle > div.box > div > h2").Text())
 		status := isMediaAvailable(copy)
 		media = append(media, domain.Media{Title: title, Branch: removeBranchSuffix(branch), Platform: platform, IsAvailable: status})
 	})

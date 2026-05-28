@@ -17,17 +17,17 @@ func TestFileStoreToggle(t *testing.T) {
 	store := newTestFileStore(t)
 	item := Item{Title: "Inception", Type: "movie"}
 
-	added := store.Toggle("session1", item)
+	added := store.Toggle("2502d7238f5963949085e14faa2980bd", item)
 	True(t, added, "first toggle should add item")
 
-	items := store.GetAll("session1")
+	items := store.GetAll("2502d7238f5963949085e14faa2980bd")
 	Equal(t, 1, len(items))
 	Equal(t, item, items[0])
 
-	removed := store.Toggle("session1", item)
+	removed := store.Toggle("2502d7238f5963949085e14faa2980bd", item)
 	False(t, removed, "second toggle should remove item")
 
-	items = store.GetAll("session1")
+	items = store.GetAll("2502d7238f5963949085e14faa2980bd")
 	Equal(t, 0, len(items))
 }
 
@@ -44,12 +44,12 @@ func TestFileStoreRemove(t *testing.T) {
 
 func TestFileStoreClear(t *testing.T) {
 	store := newTestFileStore(t)
-	store.Toggle("session3", Item{Title: "Matrix", Type: "movie"})
-	store.Toggle("session3", Item{Title: "Dune", Type: "movie"})
+	store.Toggle("2502d7238f5963949085e14faa29aaaa", Item{Title: "Matrix", Type: "movie"})
+	store.Toggle("2502d7238f5963949085e14faa29aaaa", Item{Title: "Dune", Type: "movie"})
 
-	store.Clear("session3")
+	store.Clear("2502d7238f5963949085e14faa29aaaa")
 
-	items := store.GetAll("session3")
+	items := store.GetAll("2502d7238f5963949085e14faa29aaaa")
 	Equal(t, 0, len(items))
 }
 
@@ -60,12 +60,12 @@ func TestFileStorePersistence(t *testing.T) {
 	// Write via first instance.
 	store1, err := NewFileStore(tmpDir)
 	Nil(t, err)
-	store1.Toggle("sessionX", item)
+	store1.Toggle("2502d7238f5963949085e14faa29bbbb", item)
 
 	// Read back via a second instance pointing at the same directory.
 	store2, err := NewFileStore(tmpDir)
 	Nil(t, err)
-	items := store2.GetAll("sessionX")
+	items := store2.GetAll("2502d7238f5963949085e14faa29bbbb")
 
 	Equal(t, 1, len(items))
 	Equal(t, item, items[0])
@@ -73,11 +73,11 @@ func TestFileStorePersistence(t *testing.T) {
 
 func TestFileStoreIsolatesSessions(t *testing.T) {
 	store := newTestFileStore(t)
-	store.Toggle("sessionA", Item{Title: "Film A", Type: "movie"})
-	store.Toggle("sessionB", Item{Title: "Film B", Type: "movie"})
+	store.Toggle("2502d7238f5963949085e14faa29aaaa", Item{Title: "Film A", Type: "movie"})
+	store.Toggle("2502d7238f5963949085e14faa29bbbb", Item{Title: "Film B", Type: "movie"})
 
-	itemsA := store.GetAll("sessionA")
-	itemsB := store.GetAll("sessionB")
+	itemsA := store.GetAll("2502d7238f5963949085e14faa29aaaa")
+	itemsB := store.GetAll("2502d7238f5963949085e14faa29bbbb")
 
 	Equal(t, 1, len(itemsA))
 	Equal(t, "Film A", itemsA[0].Title)
