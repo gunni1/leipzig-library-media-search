@@ -10,7 +10,7 @@ build-amd64:
 
 build-arm64-linux:
 	go build ./...
-	GOOS=linux GOARCH=arm64 go build -o bin/lib-api-arm64-linux main.go
+	GOOS=linux GOARCH=arm64 go build -o bin/llms-arm64-linux main.go
 
 build-cli:
 	go build ./...
