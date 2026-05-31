@@ -26,7 +26,7 @@ jobs:
         run: go test ./...
 
       - name: Build ARM64 Linux binary
-        run: GOOS=linux GOARCH=arm64 go build -o bin/lib-api-arm64-linux main.go
+        run: GOOS=linux GOARCH=arm64 go build -o bin/llms-arm64-linux main.go
 
       - name: Generate SHA256 checksum
         run: |
@@ -40,7 +40,7 @@ jobs:
           gh release create "${{ github.ref_name }}" \
             --title "${{ github.ref_name }}" \
             --generate-notes \
-            bin/lib-api-arm64-linux \
+            bin/llms-arm64-linux \
             bin/SHA256SUMS
 
   build-and-push-image:
