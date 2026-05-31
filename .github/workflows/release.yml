@@ -31,7 +31,7 @@ jobs:
       - name: Generate SHA256 checksum
         run: |
           cd bin
-          sha256sum lib-api-arm64-linux > SHA256SUMS
+          sha256sum llms-arm64-linux > SHA256SUMS
 
       - name: Create GitHub Release and upload binary
         env:
