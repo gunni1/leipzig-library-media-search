@@ -1,5 +1,10 @@
-<ul>
-    {{ range .Items }}
-    <li class="px-4 py-2">{{ .Title }}</li>
-    {{ end }}
-</ul>
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+    <!-- Items List -->
+    <ul class="space-y-3">
+        {{ range .Items}}
+            <li class="group hover:bg-slate-50 rounded-xl p-4 transition-colors ">
+                <span class="text-slate-800 font-medium truncate ">{{ .Title }}</span>
+            </li>
+        {{ end }}
+    </ul>
+</div> 
