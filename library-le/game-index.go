@@ -2,17 +2,9 @@ package libraryle
 
 import (
 	"fmt"
-	"io"
 	"log"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/gunni1/leipzig-library-media-search/domain"
-)
-
-const (
-	resultItemSelector   string = "h2[class^=recordtitle]"
-	titleSelector        string = "a[href^='/webOPACClient/singleHit']"
-	availabilitySelector string = "span[class^=textgruen]"
 )
 
 func (libClient Client) FindAvailabelGames(branchCode int, platform string) []domain.Game {
@@ -35,26 +27,4 @@ func (libClient Client) FindAvailabelGames(branchCode int, platform string) []do
 		return nil
 	}
 	return games
-}
-
-// Takes a html as reader from a webopac search and
-// try to parse it to an array of games that are listed as available.
-func parseGameSearchResult(searchResult io.Reader) ([]domain.Game, error) {
-	doc, docErr := goquery.NewDocumentFromReader(searchResult)
-	if docErr != nil {
-		log.Println("Could not create document from response.")
-		return nil, docErr
-	}
-	games := make([]domain.Game, 0)
-	doc.Find(resultItemSelector).Each(func(i int, resultItem *goquery.Selection) {
-		title := resultItem.Find(titleSelector).Text()
-		if isGameAvailable(resultItem.Parent()) {
-			games = append(games, domain.Game{Title: title})
-		}
-	})
-	return games, nil
-}
-
-func isGameAvailable(searchHitNode *goquery.Selection) bool {
-	return searchHitNode.Find(availabilitySelector).Length() > 0
 }
