@@ -21,18 +21,27 @@ func main() {
 	if *searchGame && *searchMovie || !*searchGame && !*searchMovie {
 		log.Fatal("please select either -movie OR -game search flag")
 	}
-	client := libClient.Client{}
+
+	client := libClient.NewClientWithSession()
 	var media []domain.Media
+	var err error
+
 	if *searchGame {
-		//TODO: validate platform is set
-		media = client.FindGames(*titlePtr, *platformPtr)
+		media, err = client.FindGames(*titlePtr, *platformPtr)
+	} else {
+		media, err = client.FindMovies(*titlePtr)
 	}
-	if *searchMovie {
-		media = client.FindMovies(*titlePtr)
+
+	if err != nil {
+		log.Fatalf("search failed: %v", err)
+	}
+
+	if len(media) == 0 {
+		fmt.Println("No results found")
+		return
 	}
 
 	for _, result := range media {
 		fmt.Printf("%#v\n", result)
 	}
-
 }
