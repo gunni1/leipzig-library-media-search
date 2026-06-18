@@ -89,8 +89,13 @@ func gameSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	showNotAvailable := strings.ToLower(request.PostFormValue("showNotAvailable")) == "true"
 
-	client := libClient.Client{}
-	games := client.FindGames(title, platform)
+	client := libClient.NewClientWithSession()
+	games, err := client.FindGames(title, platform)
+	if err != nil {
+		log.Printf("gameSearchHandler: %v", err)
+		fmt.Fprint(respWriter, "<p>Suche fehlgeschlagen.</p>")
+		return
+	}
 	if !showNotAvailable {
 		games = filterAvailable(games)
 	}
@@ -102,8 +107,13 @@ func movieSearchHandler(respWriter http.ResponseWriter, request *http.Request) {
 	title := strings.ToLower(request.PostFormValue("movie-title"))
 	showNotAvailable := strings.ToLower(request.PostFormValue("showNotAvailable")) == "true"
 
-	client := libClient.Client{}
-	movies := client.FindMovies(title)
+	client := libClient.NewClientWithSession()
+	movies, err := client.FindMovies(title)
+	if err != nil {
+		log.Printf("movieSearchHandler: %v", err)
+		fmt.Fprint(respWriter, "<p>Suche fehlgeschlagen.</p>")
+		return
+	}
 	if !showNotAvailable {
 		movies = filterAvailable(movies)
 	}
@@ -122,6 +132,7 @@ func returnDateHandler(respWriter http.ResponseWriter, request *http.Request) {
 	client := libClient.NewClientWithSession()
 	returnDate, err := client.RetrieveReturnDate(branchCode, platform, title)
 	if err != nil {
+		log.Printf("returnDateHandler: %v", err)
 		fmt.Fprint(respWriter, "unbekannt")
 		return
 	}
@@ -134,12 +145,19 @@ func watchlistCheckHandler(respWriter http.ResponseWriter, request *http.Request
 	platform := request.URL.Query().Get("platform")
 	mediaType := request.URL.Query().Get("type")
 
-	client := libClient.Client{}
+	client := libClient.NewClientWithSession()
 	var medias []domain.Media
+	var err error
 	if mediaType == domain.MOVIE {
-		medias = client.FindMovies(title)
+		medias, err = client.FindMovies(title)
 	} else {
-		medias = client.FindGames(title, platform)
+		medias, err = client.FindGames(title, platform)
+	}
+
+	if err != nil {
+		log.Printf("watchlistCheckHandler: %v", err)
+		http.Error(respWriter, "search failed", http.StatusInternalServerError)
+		return
 	}
 
 	// Filter to exact title match (library search is fuzzy)
@@ -329,11 +347,17 @@ func gameIndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	platform := strings.ToLower(request.PostFormValue("platform"))
 	branchCode, exists := libClient.GetBranchCode(branch)
 	if !exists {
-		log.Printf("Requested branch: %s does not exists.", branch)
+		log.Printf("Requested branch: %s does not exist.", branch)
+		fmt.Fprint(respWriter, "<p>Bibliothek nicht gefunden.</p>")
 		return
 	}
-	client := libClient.Client{}
-	games := client.FindAvailabelGames(branchCode, platform)
+	client := libClient.NewClientWithSession()
+	games, err := client.FindAvailableGames(branchCode, platform)
+	if err != nil {
+		log.Printf("gameIndexHandler: %v", err)
+		fmt.Fprint(respWriter, "<p>Suche fehlgeschlagen.</p>")
+		return
+	}
 
 	if len(games) == 0 {
 		fmt.Fprint(respWriter, "<p>Es wurden keine ausleihbaren Titel gefunden.</p>")
