@@ -1,11 +1,7 @@
 package libraryle
 
 import (
-	"bufio"
-	"io"
-	"log"
 	"net/http"
-	"os"
 	"testing"
 
 	. "github.com/stretchr/testify/assert"
@@ -56,10 +52,4 @@ func assertSessionCookiesExists(request *http.Request, t *testing.T) {
 	True(t, foundUserSessionId)
 }
 
-func loadTestData(filePath string) io.Reader {
-	file, fileErr := os.Open(filePath)
-	if fileErr != nil {
-		log.Fatal(fileErr)
-	}
-	return bufio.NewReader(file)
-}
+
