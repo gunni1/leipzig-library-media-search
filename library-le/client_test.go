@@ -4,8 +4,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gunni1/leipzig-library-media-search/catalog"
 	. "github.com/stretchr/testify/assert"
 )
+
+// Verify that Client implements catalog.Client
+var _ catalog.Client = (*Client)(nil)
 
 const (
 	jSessionId    string = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
