@@ -78,7 +78,7 @@ Search for a game by title and platform across all branches.
 
 **Input:**
 - `title` (string, required) — game title to search for
-- `platform` (string, required) — one of: `switch 1`, `switch 2`, `playstation`, `xbox`, `pc`
+- `platform` (string, required) — one of: `switch 1`, `switch 2`, `playstation`, `xbox`
 
 **Output:** JSON array of available copies
 ```json
@@ -102,7 +102,7 @@ List all games currently available to borrow at a specific branch.
 
 **Input:**
 - `branch` (string, required) — branch name (see Valid Branches table below)
-- `platform` (string, required) — one of: `switch 1`, `switch 2`, `playstation`, `xbox`, `pc`
+- `platform` (string, required) — one of: `switch 1`, `switch 2`, `playstation`, `xbox`
 
 **Output:** JSON array of available games
 ```json
@@ -125,7 +125,7 @@ Get the expected return date for a checked-out item.
 
 **Input:**
 - `branch` (string, required) — branch name (see Valid Branches table below)
-- `platform` (string, required) — one of: `switch 1`, `switch 2`, `playstation`, `xbox`, `pc`, `dvd`, `bluray`
+- `platform` (string, required) — one of: `switch 1`, `switch 2`, `playstation`, `xbox`, `dvd`, `bluray`
 - `title` (string, required) — exact title of the item
 
 **Output:** Plain text date string
@@ -143,7 +143,7 @@ All branch-accepting tools (tools 3 and 4) accept these case-insensitive strings
 
 | Branch Name | Display Name |
 |---|---|
-| `stadtbibliothek` | Main library |
+| `stadtbibliothek` | Stadtbibliothek |
 | `plagwitz` | Plagwitz |
 | `wiederitzsch` | Wiederitzsch |
 | `böhlitz` | Böhlitz-Ehrenberg |

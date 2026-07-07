@@ -295,7 +295,7 @@ func searchGamesTool() mcp.Tool {
 	return mcp.NewTool("search_games",
 		mcp.WithDescription("Search for games available to borrow at Leipzig city library branches by title and platform."),
 		mcp.WithString("title", mcp.Required(), mcp.Description("Game title to search for")),
-		mcp.WithString("platform", mcp.Required(), mcp.Description("Platform to filter by. Valid values: switch 1, switch 2, playstation, xbox, pc")),
+		mcp.WithString("platform", mcp.Required(), mcp.Description("Platform to filter by. Valid values: switch 1, switch 2, playstation, xbox")),
 	)
 }
 
@@ -422,7 +422,7 @@ func listAvailableGamesTool() mcp.Tool {
 	return mcp.NewTool("list_available_games",
 		mcp.WithDescription("List all games currently available to borrow at a specific Leipzig library branch and platform. Valid branches: "+validBranchesList),
 		mcp.WithString("branch", mcp.Required(), mcp.Description("Library branch name (case-insensitive), e.g., gohlis, plagwitz, stadtbibliothek")),
-		mcp.WithString("platform", mcp.Required(), mcp.Description("Platform to filter by. Valid values: switch 1, switch 2, playstation, xbox, pc")),
+		mcp.WithString("platform", mcp.Required(), mcp.Description("Platform to filter by. Valid values: switch 1, switch 2, playstation, xbox")),
 	)
 }
 
@@ -550,7 +550,7 @@ func getReturnDateTool() mcp.Tool {
 	return mcp.NewTool("get_return_date",
 		mcp.WithDescription("Get the expected return date for a checked-out item at a specific Leipzig library branch. Returns a date in DD.MM.YYYY format. Valid branches: "+validBranchesList),
 		mcp.WithString("branch", mcp.Required(), mcp.Description("Library branch name (case-insensitive), e.g., gohlis, plagwitz, stadtbibliothek")),
-		mcp.WithString("platform", mcp.Required(), mcp.Description("Item platform or format. Valid values: switch 1, switch 2, playstation, xbox, pc, dvd, bluray")),
+		mcp.WithString("platform", mcp.Required(), mcp.Description("Item platform or format. Valid values: switch 1, switch 2, playstation, xbox, dvd, bluray")),
 		mcp.WithString("title", mcp.Required(), mcp.Description("Exact title of the item")),
 	)
 }
