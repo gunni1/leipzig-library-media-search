@@ -1,15 +1,15 @@
 package libraryle
 
 import (
-	"bufio"
-	"io"
-	"log"
 	"net/http"
-	"os"
 	"testing"
 
+	"github.com/gunni1/leipzig-library-media-search/catalog"
 	. "github.com/stretchr/testify/assert"
 )
+
+// Verify that Client implements catalog.Client
+var _ catalog.Client = (*Client)(nil)
 
 const (
 	jSessionId    string = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
@@ -56,10 +56,4 @@ func assertSessionCookiesExists(request *http.Request, t *testing.T) {
 	True(t, foundUserSessionId)
 }
 
-func loadTestData(filePath string) io.Reader {
-	file, fileErr := os.Open(filePath)
-	if fileErr != nil {
-		log.Fatal(fileErr)
-	}
-	return bufio.NewReader(file)
-}
+
