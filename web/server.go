@@ -206,12 +206,19 @@ func availabilityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := libClient.Client{}
+	client := libClient.NewClientWithSession()
 	var medias []domain.Media
+	var err error
 	if mediaType == domain.MOVIE {
-		medias = client.FindMovies(title)
+		medias, err = client.FindMovies(title)
 	} else {
-		medias = client.FindGames(title, platform)
+		medias, err = client.FindGames(title, platform)
+	}
+
+	if err != nil {
+		log.Printf("watchlistCheckHandler: %v", err)
+		http.Error(w, "search failed", http.StatusInternalServerError)
+		return
 	}
 
 	titleLower := strings.ToLower(title)
