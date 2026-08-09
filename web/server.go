@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"embed"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -27,6 +28,7 @@ var htmlTemplates embed.FS
 var staticHtml embed.FS
 
 var wlStore *watchlist.FileStore
+var notifierBaseURL string
 
 // sessionID reads the wl_session cookie, creating and setting one if absent.
 func sessionID(w http.ResponseWriter, r *http.Request) string {
@@ -52,8 +54,9 @@ func setCookie(w http.ResponseWriter, value string) {
 }
 
 // Create Mux and setup routes
-func InitMux(store *watchlist.FileStore) *http.ServeMux {
+func InitMux(store *watchlist.FileStore, notifierURL string) *http.ServeMux {
 	wlStore = store
+	notifierBaseURL = notifierURL
 	mux := http.NewServeMux()
 	fileSys, _ := fs.Sub(staticHtml, "static")
 
@@ -69,6 +72,9 @@ func InitMux(store *watchlist.FileStore) *http.ServeMux {
 	mux.HandleFunc("GET /watchlist", watchlistPageHandler)
 	mux.HandleFunc("GET /watchlist/share", watchlistShareHandler)
 	mux.HandleFunc("GET /watchlist/join", watchlistJoinHandler)
+	mux.HandleFunc("GET /api/availability", availabilityHandler)
+	mux.HandleFunc("POST /watchlist/subscribe", watchlistSubscribeHandler)
+	mux.HandleFunc("GET /watchlist/notify-form", watchlistNotifyFormHandler)
 	return mux
 }
 
@@ -184,6 +190,108 @@ func watchlistCheckHandler(respWriter http.ResponseWriter, request *http.Request
 	if err := templ.Execute(respWriter, data); err != nil {
 		log.Println(err)
 	}
+}
+
+type availabilityResponse struct {
+	Available bool     `json:"available"`
+	Branches  []string `json:"branches"`
+}
+
+func availabilityHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Query().Get("title")
+	platform := r.URL.Query().Get("platform")
+	mediaType := r.URL.Query().Get("type")
+	if title == "" {
+		http.Error(w, "title is required", http.StatusBadRequest)
+		return
+	}
+
+	client := libClient.NewClientWithSession()
+	var medias []domain.Media
+	var err error
+	if mediaType == domain.MOVIE {
+		medias, err = client.FindMovies(title)
+	} else {
+		medias, err = client.FindGames(title, platform)
+	}
+
+	if err != nil {
+		log.Printf("watchlistCheckHandler: %v", err)
+		http.Error(w, "search failed", http.StatusInternalServerError)
+		return
+	}
+
+	titleLower := strings.ToLower(title)
+	available := false
+	branches := make([]string, 0)
+	for _, media := range medias {
+		if strings.ToLower(media.Title) == titleLower && media.IsAvailable {
+			available = true
+			branches = append(branches, media.Branch)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(availabilityResponse{Available: available, Branches: branches})
+}
+
+func watchlistNotifyFormHandler(w http.ResponseWriter, r *http.Request) {
+	if notifierBaseURL == "" {
+		http.Error(w, "notification service not configured", http.StatusServiceUnavailable)
+		return
+	}
+	title := r.URL.Query().Get("title")
+	mediaType := r.URL.Query().Get("type")
+	platform := r.URL.Query().Get("platform")
+	data := struct {
+		Title    string
+		Type     string
+		Platform string
+	}{title, mediaType, platform}
+	templ, err := template.ParseFS(htmlTemplates, "templates/notify-form.html")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "template error", http.StatusInternalServerError)
+		return
+	}
+	if err := templ.Execute(w, data); err != nil {
+		log.Println(err)
+	}
+}
+
+func watchlistSubscribeHandler(w http.ResponseWriter, r *http.Request) {
+	if notifierBaseURL == "" {
+		http.Error(w, "notification service not configured", http.StatusServiceUnavailable)
+		return
+	}
+	title := r.PostFormValue("title")
+	platform := r.PostFormValue("platform")
+	mediaType := r.PostFormValue("type")
+	email := r.PostFormValue("email")
+	if title == "" || email == "" || mediaType == "" {
+		http.Error(w, "title, type and email are required", http.StatusBadRequest)
+		return
+	}
+
+	payload := url.Values{}
+	payload.Set("title", title)
+	payload.Set("platform", platform)
+	payload.Set("type", mediaType)
+	payload.Set("email", email)
+
+	resp, err := http.PostForm(notifierBaseURL+"/subscriptions", payload)
+	if err != nil {
+		log.Printf("notifier unreachable: %v", err)
+		http.Error(w, "could not reach notification service", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		http.Error(w, "notification service rejected request", resp.StatusCode)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, `<p class="text-sm text-green-600 mt-2">Benachrichtigung eingerichtet ✓</p>`)
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter, request *http.Request) {

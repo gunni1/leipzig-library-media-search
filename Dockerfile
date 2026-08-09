@@ -1,6 +1,4 @@
 # Stage Build
-# Cross-compilation: build stage runs on the host arch (amd64 in CI), Go cross-compiles
-# the binary to TARGETARCH natively. No QEMU needed for pure-Go builds.
 FROM golang:1.26 AS build
 
 ARG TARGETARCH=arm64
