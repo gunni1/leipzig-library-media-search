@@ -73,8 +73,6 @@ func InitMux(store *watchlist.FileStore, notifierURL string) *http.ServeMux {
 	mux.HandleFunc("GET /watchlist/share", watchlistShareHandler)
 	mux.HandleFunc("GET /watchlist/join", watchlistJoinHandler)
 	mux.HandleFunc("GET /api/availability", availabilityHandler)
-	mux.HandleFunc("POST /watchlist/subscribe", watchlistSubscribeHandler)
-	mux.HandleFunc("GET /watchlist/notify-form", watchlistNotifyFormHandler)
 	return mux
 }
 
@@ -233,65 +231,6 @@ func availabilityHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(availabilityResponse{Available: available, Branches: branches})
-}
-
-func watchlistNotifyFormHandler(w http.ResponseWriter, r *http.Request) {
-	if notifierBaseURL == "" {
-		http.Error(w, "notification service not configured", http.StatusServiceUnavailable)
-		return
-	}
-	title := r.URL.Query().Get("title")
-	mediaType := r.URL.Query().Get("type")
-	platform := r.URL.Query().Get("platform")
-	data := struct {
-		Title    string
-		Type     string
-		Platform string
-	}{title, mediaType, platform}
-	templ, err := template.ParseFS(htmlTemplates, "templates/notify-form.html")
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "template error", http.StatusInternalServerError)
-		return
-	}
-	if err := templ.Execute(w, data); err != nil {
-		log.Println(err)
-	}
-}
-
-func watchlistSubscribeHandler(w http.ResponseWriter, r *http.Request) {
-	if notifierBaseURL == "" {
-		http.Error(w, "notification service not configured", http.StatusServiceUnavailable)
-		return
-	}
-	title := r.PostFormValue("title")
-	platform := r.PostFormValue("platform")
-	mediaType := r.PostFormValue("type")
-	email := r.PostFormValue("email")
-	if title == "" || email == "" || mediaType == "" {
-		http.Error(w, "title, type and email are required", http.StatusBadRequest)
-		return
-	}
-
-	payload := url.Values{}
-	payload.Set("title", title)
-	payload.Set("platform", platform)
-	payload.Set("type", mediaType)
-	payload.Set("email", email)
-
-	resp, err := http.PostForm(notifierBaseURL+"/subscriptions", payload)
-	if err != nil {
-		log.Printf("notifier unreachable: %v", err)
-		http.Error(w, "could not reach notification service", http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		http.Error(w, "notification service rejected request", resp.StatusCode)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, `<p class="text-sm text-green-600 mt-2">Benachrichtigung eingerichtet ✓</p>`)
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter, request *http.Request) {

@@ -32,7 +32,7 @@ func (fs *fakeSender) Send(sub Subscription) error {
 
 func TestScheduler_RunOnce_NotifiesAndDeletesWhenAvailable(t *testing.T) {
 	store, _ := NewSubscriptionStore(t.TempDir())
-	store.Save(Subscription{Email: "a@b.com", Title: "Dune", Type: "movie"})
+	store.Save(Subscription{ChatId: "1111111", Title: "Dune", Type: "movie"})
 
 	checker := &fakeChecker{available: true}
 	sender := &fakeSender{}
@@ -50,7 +50,7 @@ func TestScheduler_RunOnce_NotifiesAndDeletesWhenAvailable(t *testing.T) {
 
 func TestScheduler_RunOnce_SkipsWhenNotAvailable(t *testing.T) {
 	store, _ := NewSubscriptionStore(t.TempDir())
-	store.Save(Subscription{Email: "a@b.com", Title: "Dune", Type: "movie"})
+	store.Save(Subscription{ChatId: "1111111", Title: "Dune", Type: "movie"})
 
 	checker := &fakeChecker{available: false}
 	sender := &fakeSender{}
@@ -66,8 +66,8 @@ func TestScheduler_RunOnce_SkipsWhenNotAvailable(t *testing.T) {
 
 func TestScheduler_RunOnce_ContinuesOnSendError(t *testing.T) {
 	store, _ := NewSubscriptionStore(t.TempDir())
-	store.Save(Subscription{Email: "a@b.com", Title: "Dune", Type: "movie"})
-	store.Save(Subscription{Email: "b@c.com", Title: "Zelda", Type: "game"})
+	store.Save(Subscription{ChatId: "1111111", Title: "Dune", Type: "movie"})
+	store.Save(Subscription{ChatId: "1111111", Title: "Zelda", Type: "game"})
 
 	checker := &fakeChecker{available: true}
 	sender := &fakeSender{err: fmt.Errorf("smtp timeout")}

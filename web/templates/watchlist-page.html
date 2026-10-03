@@ -54,7 +54,7 @@
                         </form>
                     </div>
 
-                    <!-- Live availability (loaded via HTMX) -->
+                    <!-- Live availability -->
                     <div hx-get="/watchlist/check?title={{ urlquery $item.Title }}&platform={{ $item.Platform }}&type={{ $item.Type }}"
                          hx-trigger="load"
                          class="text-sm">
@@ -65,12 +65,8 @@
                     </div>
                     <!-- Notify-me button (expands inline form via HTMX) -->
                     <div id="notify-{{ $i }}" class="mt-2">
-                        <button hx-get="/watchlist/notify-form?title={{ urlquery $item.Title }}&type={{ $item.Type }}&platform={{ urlquery $item.Platform }}"
-                                hx-target="#notify-{{ $i }}"
-                                hx-swap="innerHTML"
-                                class="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 rounded-lg px-2 py-1 transition-colors">
-                            🔔 Benachrichtigung einrichten
-                        </button>
+                        <a href="https://t.me/LLMSNotifyBot?start={{ $item.Title }}-{{ $item.Platform }}-{{ $item.Type }}">Link</a>
+
                     </div>
                 </li>
                 {{ end }}

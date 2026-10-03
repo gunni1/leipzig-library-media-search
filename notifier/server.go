@@ -14,6 +14,7 @@ func NewNotifierMux(store *SubscriptionStore, scheduler *Scheduler) *http.ServeM
 	return mux
 }
 
+// TODO: this has to go to the bot part
 func makeSubscribeHandler(store *SubscriptionStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.PostFormValue("email")
@@ -25,7 +26,7 @@ func makeSubscribeHandler(store *SubscriptionStore) http.HandlerFunc {
 			return
 		}
 		sub := Subscription{
-			Email:    email,
+			ChatId:   email,
 			Title:    title,
 			Type:     mediaType,
 			Platform: platform,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gunni1/leipzig-library-media-search/watchlist"
 	"github.com/gunni1/leipzig-library-media-search/web"
@@ -13,7 +14,8 @@ import (
 func main() {
 	port := flag.Int("port", 3000, "Webserver Port")
 	dataDir := flag.String("data-dir", "data", "Directory for watchlist persistence")
-	notifierURL := flag.String("notifier-url", "", "Base URL of the notifier service (optional)")
+	checkInterval := flag.Duration("check-interval", time.Hour, "How often to check availability")
+
 	flag.Parse()
 
 	store, err := watchlist.NewFileStore(*dataDir)

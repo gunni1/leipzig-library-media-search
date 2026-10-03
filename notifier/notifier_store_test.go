@@ -11,10 +11,10 @@ func TestStore_SaveAndGetAll(t *testing.T) {
 	Nil(t, err)
 
 	sub := Subscription{
-		Email:    "test@example.com",
+		ChatId:   "1111111",
 		Title:    "Dune",
 		Type:     "movie",
-		Platform: "",
+		Platform: "dvd",
 	}
 	saved, err := store.Save(sub)
 	Nil(t, err)
@@ -28,7 +28,7 @@ func TestStore_SaveAndGetAll(t *testing.T) {
 
 func TestStore_Delete(t *testing.T) {
 	store, _ := NewSubscriptionStore(t.TempDir())
-	sub, _ := store.Save(Subscription{Email: "a@b.com", Title: "Test", Type: "game", Platform: "switch"})
+	sub, _ := store.Save(Subscription{ChatId: "1111111", Title: "Test", Type: "game", Platform: "switch"})
 
 	err := store.Delete(sub.ID)
 	Nil(t, err)

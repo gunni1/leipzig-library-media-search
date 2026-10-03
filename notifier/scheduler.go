@@ -44,7 +44,7 @@ func (scheduler *Scheduler) RunOnce() error {
 			continue
 		}
 		if sendErr := scheduler.sender.Send(sub); sendErr != nil {
-			log.Printf("scheduler: failed to notify %s for %q: %v", sub.Email, sub.Title, sendErr)
+			log.Printf("scheduler: failed to notify %s for %q: %v", sub.ChatId, sub.Title, sendErr)
 			continue
 		}
 		if deleteErr := scheduler.store.Delete(sub.ID); deleteErr != nil {

@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-// Subscription represents a single email notification subscription.
+// Subscription represents a single notification subscription.
 type Subscription struct {
 	ID        string    `json:"id"`
-	Email     string    `json:"email"`
+	ChatId    string    `json:"chatId"`
 	Title     string    `json:"title"`
-	Type      string    `json:"type"`
 	Platform  string    `json:"platform"`
+	Type      string    `json:"type"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
