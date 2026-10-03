@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"embed"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -27,6 +28,7 @@ var htmlTemplates embed.FS
 var staticHtml embed.FS
 
 var wlStore *watchlist.FileStore
+var notifierBaseURL string
 
 // sessionID reads the wl_session cookie, creating and setting one if absent.
 func sessionID(w http.ResponseWriter, r *http.Request) string {
@@ -52,8 +54,9 @@ func setCookie(w http.ResponseWriter, value string) {
 }
 
 // Create Mux and setup routes
-func InitMux(store *watchlist.FileStore) *http.ServeMux {
+func InitMux(store *watchlist.FileStore, notifierURL string) *http.ServeMux {
 	wlStore = store
+	notifierBaseURL = notifierURL
 	mux := http.NewServeMux()
 	fileSys, _ := fs.Sub(staticHtml, "static")
 
@@ -69,6 +72,7 @@ func InitMux(store *watchlist.FileStore) *http.ServeMux {
 	mux.HandleFunc("GET /watchlist", watchlistPageHandler)
 	mux.HandleFunc("GET /watchlist/share", watchlistShareHandler)
 	mux.HandleFunc("GET /watchlist/join", watchlistJoinHandler)
+	mux.HandleFunc("GET /api/availability", availabilityHandler)
 	return mux
 }
 
@@ -184,6 +188,49 @@ func watchlistCheckHandler(respWriter http.ResponseWriter, request *http.Request
 	if err := templ.Execute(respWriter, data); err != nil {
 		log.Println(err)
 	}
+}
+
+type availabilityResponse struct {
+	Available bool     `json:"available"`
+	Branches  []string `json:"branches"`
+}
+
+func availabilityHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Query().Get("title")
+	platform := r.URL.Query().Get("platform")
+	mediaType := r.URL.Query().Get("type")
+	if title == "" {
+		http.Error(w, "title is required", http.StatusBadRequest)
+		return
+	}
+
+	client := libClient.NewClientWithSession()
+	var medias []domain.Media
+	var err error
+	if mediaType == domain.MOVIE {
+		medias, err = client.FindMovies(title)
+	} else {
+		medias, err = client.FindGames(title, platform)
+	}
+
+	if err != nil {
+		log.Printf("watchlistCheckHandler: %v", err)
+		http.Error(w, "search failed", http.StatusInternalServerError)
+		return
+	}
+
+	titleLower := strings.ToLower(title)
+	available := false
+	branches := make([]string, 0)
+	for _, media := range medias {
+		if strings.ToLower(media.Title) == titleLower && media.IsAvailable {
+			available = true
+			branches = append(branches, media.Branch)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(availabilityResponse{Available: available, Branches: branches})
 }
 
 func renderMediaResults(media []domain.Media, mediaType string, respWriter http.ResponseWriter, request *http.Request) {
