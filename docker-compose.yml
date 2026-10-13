@@ -1,0 +1,47 @@
+services:
+  library:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - library-data:/data
+    command: ["-notifier-url", "http://notifier:8081"]
+
+  notifier:
+    build:
+      context: .
+      dockerfile: Dockerfile.notifier
+    ports:
+      - "8081:8081"
+    volumes:
+      - notifier-data:/data
+    environment:
+      SMTP_PASSWORD: "password"
+    command:
+      - "-data-dir=/data"
+      - "-library-url=http://library:3000"
+      - "-smtp-host=mailpit"
+      - "-smtp-from=test@kubelabs.org"
+      - "-smtp-user=user"
+      - "-smtp-port=1025"
+      - "-check-interval=1m"
+    depends_on:
+      - library
+  mailpit:
+        image: axllent/mailpit
+        container_name: mailpit
+        restart: unless-stopped
+        volumes:
+            - ./data:/data
+        ports:
+            - 8025:8025
+            - 1025:1025
+        environment:
+            MP_MAX_MESSAGES: 5000
+            MP_DATABASE: /data/mailpit.db
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+volumes:
+  library-data:
+  notifier-data:
