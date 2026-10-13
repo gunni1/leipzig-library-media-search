@@ -54,9 +54,8 @@ func setCookie(w http.ResponseWriter, value string) {
 }
 
 // Create Mux and setup routes
-func InitMux(store *watchlist.FileStore, notifierURL string) *http.ServeMux {
+func InitMux(store *watchlist.FileStore) *http.ServeMux {
 	wlStore = store
-	notifierBaseURL = notifierURL
 	mux := http.NewServeMux()
 	fileSys, _ := fs.Sub(staticHtml, "static")
 
@@ -72,7 +71,6 @@ func InitMux(store *watchlist.FileStore, notifierURL string) *http.ServeMux {
 	mux.HandleFunc("GET /watchlist", watchlistPageHandler)
 	mux.HandleFunc("GET /watchlist/share", watchlistShareHandler)
 	mux.HandleFunc("GET /watchlist/join", watchlistJoinHandler)
-	mux.HandleFunc("GET /api/availability", availabilityHandler)
 	return mux
 }
 

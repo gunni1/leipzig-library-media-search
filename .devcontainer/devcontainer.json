@@ -1,0 +1,16 @@
+{
+  "name": "Go",
+  "image": "mcr.microsoft.com/devcontainers/go:1.26",
+  "remoteUser":"vscode",
+  "customizations": {
+    "zed": { }
+  },
+  "mounts": [
+    "source=/run/user/1000/keyring/ssh,target=/ssh-agent,type=bind"
+  ],
+  "containerEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+  "runArgs": ["--security-opt=label=disable"],
+  "postCreateCommand": "go install golang.org/x/tools/gopls@latest"
+}
