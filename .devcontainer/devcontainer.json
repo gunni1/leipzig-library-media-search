@@ -9,7 +9,11 @@
     "source=/run/user/1000/keyring/ssh,target=/ssh-agent,type=bind"
   ],
   "containerEnv": {
-    "SSH_AUTH_SOCK": "/ssh-agent"
+    "SSH_AUTH_SOCK": "/ssh-agent",
+    "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+    "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}",
+    "GIT_COMMITTER_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+    "GIT_COMMITTER_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}"
   },
   "runArgs": ["--security-opt=label=disable"],
   "postCreateCommand": "go install golang.org/x/tools/gopls@latest"
