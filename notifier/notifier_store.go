@@ -17,6 +17,7 @@ type Subscription struct {
 	Title     string    `json:"title"`
 	Platform  string    `json:"platform"`
 	Type      string    `json:"type"`
+	Branch    string    `json:"branch"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 

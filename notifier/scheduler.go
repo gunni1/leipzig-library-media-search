@@ -6,8 +6,9 @@ import (
 )
 
 // Checker checks whether a media item is currently available.
+// Returns a list of branches where its available.
 type Checker interface {
-	IsAvailable(sub Subscription) (bool, error)
+	IsAvailable(sub Subscription) ([]string, error)
 }
 
 // Sender sends a notification for a subscription.

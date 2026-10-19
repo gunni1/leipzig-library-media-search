@@ -1,24 +1,21 @@
 package notifier
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
+	"strings"
+
+	"github.com/gunni1/leipzig-library-media-search/catalog"
+	"github.com/gunni1/leipzig-library-media-search/domain"
+	libClient "github.com/gunni1/leipzig-library-media-search/library-le"
 )
 
-// AvailabilityChecker calls the library web service to check if a media item is available.
+// AvailabilityChecker use a catalog client to check the availability
 type AvailabilityChecker struct {
-	libraryBaseURL string
-	httpClient     *http.Client
+	client catalog.Client
 }
 
 // NewAvailabilityChecker creates a checker that calls the given library service base URL.
-func NewAvailabilityChecker(libraryBaseURL string) *AvailabilityChecker {
-	return &AvailabilityChecker{
-		libraryBaseURL: libraryBaseURL,
-		httpClient:     &http.Client{},
-	}
+func NewAvailabilityChecker() *AvailabilityChecker {
+	return &AvailabilityChecker{libClient.NewClientWithSession()}
 }
 
 type availabilityAPIResponse struct {
@@ -27,25 +24,26 @@ type availabilityAPIResponse struct {
 }
 
 // IsAvailable queries the library API and returns true if the item is currently available.
-func (checker *AvailabilityChecker) IsAvailable(sub Subscription) (bool, error) {
-	params := url.Values{}
-	params.Set("title", sub.Title)
-	params.Set("type", sub.Type)
-	params.Set("platform", sub.Platform)
-	endpoint := fmt.Sprintf("%s/api/availability?%s", checker.libraryBaseURL, params.Encode())
-
-	resp, err := checker.httpClient.Get(endpoint)
+func (checker *AvailabilityChecker) IsAvailable(sub Subscription) ([]string, error) {
+	client := checker.client
+	var medias []domain.Media
+	var err error
+	if sub.Type == domain.MOVIE {
+		medias, err = client.FindMovies(sub.Title)
+	} else {
+		medias, err = client.FindGames(sub.Title, sub.Platform)
+	}
 	if err != nil {
-		return false, fmt.Errorf("availability check failed for %q: %w", sub.Title, err)
+		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("availability API returned status %d for %q", resp.StatusCode, sub.Title)
+	resultBranches := make([]string, 0)
+	for _, media := range medias {
+		if sub.Branch != "" && sub.Branch != media.Branch {
+			continue
+		}
+		if strings.ToLower(media.Title) == strings.ToLower(sub.Title) && media.IsAvailable {
+			resultBranches = append(resultBranches, media.Branch)
+		}
 	}
-
-	var body availabilityAPIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return false, fmt.Errorf("could not parse availability response: %w", err)
-	}
-	return body.Available, nil
+	return resultBranches, nil
 }

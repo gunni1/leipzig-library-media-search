@@ -1,49 +1,55 @@
 package notifier
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/gunni1/leipzig-library-media-search/domain"
 	. "github.com/stretchr/testify/assert"
 )
 
-func TestChecker_ReturnsTrueWhenAvailable(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		Equal(t, "/api/availability", r.URL.Path)
-		Equal(t, "Dune", r.URL.Query().Get("title"))
-		Equal(t, "movie", r.URL.Query().Get("type"))
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"available": true,
-			"branches":  []string{"Südvorstadt"},
-		})
-	}))
-	defer server.Close()
+type MockCatalogClient struct{}
 
-	checker := NewAvailabilityChecker(server.URL)
-	available, err := checker.IsAvailable(Subscription{Title: "Dune", Type: "movie"})
-	Nil(t, err)
-	True(t, available)
+func (client MockCatalogClient) FindMovies(title string) ([]domain.Media, error) {
+	return []domain.Media{
+		domain.Media{Title: "matrix", Branch: "Stadtbibliothek", Platform: "dvd", IsAvailable: true},
+		domain.Media{Title: "matrix", Branch: "Gohlis", Platform: "dvd", IsAvailable: false},
+	}, nil
+}
+func (client MockCatalogClient) FindGames(title string, platform string) ([]domain.Media, error) {
+	return []domain.Media{
+		domain.Media{Title: "Mario", Branch: "Stadtbibliothek", Platform: "switch", IsAvailable: true},
+		domain.Media{Title: "Mario", Branch: "Gohlis", Platform: "switch", IsAvailable: true},
+	}, nil
 }
 
-func TestChecker_ReturnsFalseWhenNotAvailable(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"available": false,
-			"branches":  []string{},
-		})
-	}))
-	defer server.Close()
-
-	checker := NewAvailabilityChecker(server.URL)
-	available, err := checker.IsAvailable(Subscription{Title: "Dune", Type: "movie"})
-	Nil(t, err)
-	False(t, available)
+func (client MockCatalogClient) FindAvailableGames(branchCode int, platform string) ([]domain.Game, error) {
+	return []domain.Game{domain.Game{Title: "Mario Word", Branch: "Gohlis", Platform: "switch"}}, nil
 }
 
-func TestChecker_ReturnsErrorOnHTTPFailure(t *testing.T) {
-	checker := NewAvailabilityChecker("http://127.0.0.1:0") // nothing listening
-	_, err := checker.IsAvailable(Subscription{Title: "X", Type: "movie"})
-	NotNil(t, err)
+func (client MockCatalogClient) RetrieveReturnDate(branchCode int, platform, title string) (string, error) {
+	return "", nil
+}
+
+func TestCheckAvailabilityForASubscription(t *testing.T) {
+	checker := AvailabilityChecker{MockCatalogClient{}}
+	matrixAvailability, err := checker.IsAvailable(Subscription{Title: "matrix", Platform: "dvd", Type: "movie"})
+	Nil(t, err)
+	Contains(t, matrixAvailability, "Stadtbibliothek")
+	termAvailability, err := checker.IsAvailable(Subscription{Title: "terminator", Platform: "dvd", Type: "movie"})
+	Nil(t, err)
+	Empty(t, termAvailability)
+	marioAvailability, err := checker.IsAvailable(Subscription{Title: "mario", Platform: "switch", Type: "game"})
+	Nil(t, err)
+	Len(t, marioAvailability, 2)
+	Contains(t, marioAvailability, "Gohlis", "Stadtbibliothek")
+}
+
+func TestCheckAvailabilityForSubscriptionWithBranch(t *testing.T) {
+	checker := AvailabilityChecker{MockCatalogClient{}}
+	matrixSearchWithbranchGohlis, err := checker.IsAvailable(Subscription{Title: "matrix", Platform: "dvd", Type: "movie", Branch: "Gohlis"})
+	Nil(t, err)
+	Empty(t, matrixSearchWithbranchGohlis)
+	matrixSearchWithbranchStadtBib, err := checker.IsAvailable(Subscription{Title: "matrix", Platform: "dvd", Type: "movie", Branch: "Stadtbibliothek"})
+	Nil(t, err)
+	Contains(t, matrixSearchWithbranchStadtBib, "Stadtbibliothek")
 }
