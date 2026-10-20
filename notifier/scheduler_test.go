@@ -9,14 +9,14 @@ import (
 
 // fakeChecker lets tests control IsAvailable results.
 type fakeChecker struct {
-	available bool
-	err       error
-	calls     []Subscription
+	availableIn []string
+	err         error
+	calls       []Subscription
 }
 
-func (fc *fakeChecker) IsAvailable(sub Subscription) (bool, error) {
+func (fc *fakeChecker) IsAvailable(sub Subscription) ([]string, error) {
 	fc.calls = append(fc.calls, sub)
-	return fc.available, fc.err
+	return fc.availableIn, fc.err
 }
 
 // fakeSender records which subscriptions were notified.
@@ -34,7 +34,7 @@ func TestScheduler_RunOnce_NotifiesAndDeletesWhenAvailable(t *testing.T) {
 	store, _ := NewSubscriptionStore(t.TempDir())
 	store.Save(Subscription{ChatId: "1111111", Title: "Dune", Type: "movie"})
 
-	checker := &fakeChecker{available: true}
+	checker := &fakeChecker{availableIn: []string{"Gohlis"}}
 	sender := &fakeSender{}
 	scheduler := NewScheduler(store, checker, sender)
 
@@ -52,7 +52,7 @@ func TestScheduler_RunOnce_SkipsWhenNotAvailable(t *testing.T) {
 	store, _ := NewSubscriptionStore(t.TempDir())
 	store.Save(Subscription{ChatId: "1111111", Title: "Dune", Type: "movie"})
 
-	checker := &fakeChecker{available: false}
+	checker := &fakeChecker{availableIn: []string{}}
 	sender := &fakeSender{}
 	scheduler := NewScheduler(store, checker, sender)
 
@@ -69,7 +69,7 @@ func TestScheduler_RunOnce_ContinuesOnSendError(t *testing.T) {
 	store.Save(Subscription{ChatId: "1111111", Title: "Dune", Type: "movie"})
 	store.Save(Subscription{ChatId: "1111111", Title: "Zelda", Type: "game"})
 
-	checker := &fakeChecker{available: true}
+	checker := &fakeChecker{availableIn: []string{"Gohlis"}}
 	sender := &fakeSender{err: fmt.Errorf("smtp timeout")}
 	scheduler := NewScheduler(store, checker, sender)
 

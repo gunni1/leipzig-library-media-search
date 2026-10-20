@@ -23,9 +23,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialise watchlist store: %v", err)
 	}
-	subscrStore := notifier.NewSubscriptionStore(*dataDir)
+	subscrStore, err := notifier.NewSubscriptionStore(*dataDir)
+	if err != nil {
+		log.Fatalf("failed to initialize subscription store: %v", err)
+	}
 
-	scheduler := notifier.NewScheduler()
+	sender := notifier.NewTelegramSender()
+	checker := notifier.NewAvailabilityChecker()
+	scheduler := notifier.NewScheduler(subscrStore, checker, sender)
+
+	done := make(chan struct{})
+	go scheduler.Start(*checkInterval, done)
 
 	fmt.Printf("listening on port: %d \n", *port)
 	mux := web.InitMux(wlStore)

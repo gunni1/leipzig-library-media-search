@@ -38,7 +38,7 @@ func TestEncodeBranchName(t *testing.T) {
 
 func TestAvailabilityHandler_returnsBadRequestWithoutTitle(t *testing.T) {
 	store, _ := watchlist.NewFileStore(t.TempDir())
-	mux := InitMux(store, "")
+	mux := InitMux(store)
 	req := httptest.NewRequest("GET", "/api/availability?type=movie", nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -47,7 +47,7 @@ func TestAvailabilityHandler_returnsBadRequestWithoutTitle(t *testing.T) {
 
 func TestAvailabilityHandler_returnsJSON(t *testing.T) {
 	store, _ := watchlist.NewFileStore(t.TempDir())
-	mux := InitMux(store, "")
+	mux := InitMux(store)
 	req := httptest.NewRequest("GET", "/api/availability?title=Dune&type=movie", nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -63,7 +63,7 @@ func TestAvailabilityHandler_returnsJSON(t *testing.T) {
 
 func TestSubscribeHandler_returnsServiceUnavailableWhenNotifierNotConfigured(t *testing.T) {
 	store, _ := watchlist.NewFileStore(t.TempDir())
-	mux := InitMux(store, "") // no notifier URL
+	mux := InitMux(store)
 	body := strings.NewReader("title=Dune&type=movie&email=test@example.com")
 	req := httptest.NewRequest("POST", "/watchlist/subscribe", body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -75,30 +75,11 @@ func TestSubscribeHandler_returnsServiceUnavailableWhenNotifierNotConfigured(t *
 func TestSubscribeHandler_returnsBadRequestWithoutEmail(t *testing.T) {
 	store, _ := watchlist.NewFileStore(t.TempDir())
 	// Use a fake notifier URL so the handler proceeds past the config check
-	mux := InitMux(store, "http://notifier-does-not-exist")
+	mux := InitMux(store)
 	body := strings.NewReader("title=Dune&type=movie")
 	req := httptest.NewRequest("POST", "/watchlist/subscribe", body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	Equal(t, http.StatusBadRequest, rec.Code)
-}
-
-func TestNotifyFormHandler_returnsServiceUnavailableWhenNotifierNotConfigured(t *testing.T) {
-	store, _ := watchlist.NewFileStore(t.TempDir())
-	mux := InitMux(store, "")
-	req := httptest.NewRequest("GET", "/watchlist/notify-form?title=Dune&type=movie", nil)
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	Equal(t, http.StatusServiceUnavailable, rec.Code)
-}
-
-func TestNotifyFormHandler_returnsFormWhenNotifierConfigured(t *testing.T) {
-	store, _ := watchlist.NewFileStore(t.TempDir())
-	mux := InitMux(store, "http://notifier")
-	req := httptest.NewRequest("GET", "/watchlist/notify-form?title=Dune&type=movie", nil)
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	Equal(t, http.StatusOK, rec.Code)
-	Contains(t, rec.Body.String(), "email")
 }

@@ -36,12 +36,12 @@ func (scheduler *Scheduler) RunOnce() error {
 		return err
 	}
 	for _, sub := range subs {
-		available, checkErr := scheduler.checker.IsAvailable(sub)
+		availableBranches, checkErr := scheduler.checker.IsAvailable(sub)
 		if checkErr != nil {
 			log.Printf("scheduler: availability check failed for %q: %v", sub.Title, checkErr)
 			continue
 		}
-		if !available {
+		if len(availableBranches) == 0 {
 			continue
 		}
 		if sendErr := scheduler.sender.Send(sub); sendErr != nil {
