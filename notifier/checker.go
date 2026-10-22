@@ -41,7 +41,7 @@ func (checker *AvailabilityChecker) IsAvailable(sub Subscription) ([]string, err
 		if sub.Branch != "" && sub.Branch != media.Branch {
 			continue
 		}
-		if strings.ToLower(media.Title) == strings.ToLower(sub.Title) && media.IsAvailable {
+		if strings.EqualFold(media.Title, sub.Title) && media.IsAvailable {
 			resultBranches = append(resultBranches, media.Branch)
 		}
 	}
