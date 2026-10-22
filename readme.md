@@ -7,6 +7,16 @@ Die Stadt- und Stadtteilbibliotheken in Leipzig haben zahlreiche aktuelle Videos
 Die Stadt- und Stadtteilbibliotheken haben eine Vielzahl an Filmen, Serien und Videospielen. Der Katalog der leipziger Bibliothek ist jedoch für Bücher mit Autorenkürzeln, ISBN usw. ausgelegt, sodass die Suche nach digitalen Medien teils sehr umständlich funktioniert. 
 Die Anwendung besitzt zwei Suchmasken um, so einfach wie möglich, nach Filmen/Serien oder Videospielen zu suchen. Die Ergebnisse werden je Zweigstelle gruppiert. 
 
+## Merkliste
+tbd.
+- Ergebnisse aus Suche von Film/Spiel auf eine Merkliste setzen um beim nächsten Bibliotheksbesuch nichts zu vergessen
+- Browsers session cookie als benutzeridentifikation, kann per link auf ein anderes Gerät übertragen werden
+
+## Benachrichtigung 
+tbd.
+- Für nicht verfügbare Einträge aus der Merkliste eine Benachrichtigung einrichten sobald der Titel wieder Verfügbar wird
+- Separater Service verwaltet Benachtigungen mit eigenem file basiertem speicher
+
 # Datenquelle
 Die Datengrundlage ist der WebOPAC-Katalog der Leipziger Stadibibliotheken in der "Erweiterten-Suche" unter `https://webopac.stadtbibliothek-leipzig.de/webOPACClient/search.do?methodToCall=switchSearchPage&SearchType=2`
 
@@ -88,4 +98,4 @@ Suchergebnisse werden mit dem Parametern `searchRestrictionID[]` und `searchRest
 |90     |Fahrbibliothek                 |   		
 
 # Projektstruktur
- tbd. 
+ tbd.
